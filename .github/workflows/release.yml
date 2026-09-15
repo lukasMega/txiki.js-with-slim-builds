@@ -117,6 +117,15 @@ jobs:
             zip -r "${dir%/}.zip" "$dir"
           done
 
+      # VirusTotal may share uploads. Throttle free API requests.
+      - name: Upload release packages to VirusTotal
+        continue-on-error: true
+        uses: crazy-max/ghaction-virustotal@936d8c5c00afe97d3d9a1af26d017cfdf26800a2 # v5.0.0
+        with:
+          vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
+          request_rate: 4
+          files: dist/*.zip
+
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
