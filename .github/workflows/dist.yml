@@ -288,6 +288,16 @@ jobs:
           done
           cat SHA256SUMS.txt
 
+      # VirusTotal may share uploads. Throttle free API requests.
+      - name: Upload release packages to VirusTotal
+        id: virustotal
+        continue-on-error: true
+        uses: crazy-max/ghaction-virustotal@936d8c5c00afe97d3d9a1af26d017cfdf26800a2 # v5.0.0
+        with:
+          vt_api_key: ${{ secrets.VIRUSTOTAL_API_KEY }}
+          request_rate: 4
+          files: dist/*.zip
+
       - name: Build size manifest
         env:
           RELEASE_TAG: ${{ inputs.release_tag || github.ref_name }}
@@ -297,6 +307,8 @@ jobs:
             --out dist/slim-sizes-v1.json
 
       - name: Release notes
+        env:
+          VT_ANALYSIS: ${{ steps.virustotal.outputs.analysis }}
         run: |
           {
             echo "Slim txiki.js builds (\`scripts/build-dist.mjs\`), eight profiles"
@@ -326,6 +338,19 @@ jobs:
             echo "which compiles those levers out), no WebAssembly, no"
             echo "mimalloc, and no \`eval\`/\`serve\`/\`test\`/\`bundle\`/\`app\`"
             echo "subcommands. Always present: WebCrypto, \`run\`, the REPL, \`compile\`."
+            echo
+            echo "## VirusTotal scans"
+            echo
+            if [ -n "$VT_ANALYSIS" ]; then
+              echo "| Package | Report |"
+              echo "| --- | --- |"
+              echo "$VT_ANALYSIS" | tr ',' '\n' | while IFS='=' read -r file url; do
+                [ -n "$file" ] || continue
+                echo "| \`$(basename "$file")\` | [analysis]($url) |"
+              done
+            else
+              echo "_Scan unavailable for this release._"
+            fi
             echo
             # The blank line after </summary> is what keeps the fenced blocks
             # inside parsing as Markdown rather than as literal text.
