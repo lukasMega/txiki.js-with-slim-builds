@@ -119,6 +119,7 @@ jobs:
 
       # VirusTotal may share uploads. Throttle free API requests.
       - name: Upload release packages to VirusTotal
+        id: virustotal
         continue-on-error: true
         uses: crazy-max/ghaction-virustotal@936d8c5c00afe97d3d9a1af26d017cfdf26800a2 # v5.0.0
         with:
@@ -126,7 +127,27 @@ jobs:
           request_rate: 4
           files: dist/*.zip
 
+      - name: Build release description
+        env:
+          VT_ANALYSIS: ${{ steps.virustotal.outputs.analysis }}
+        run: |
+          {
+            echo "## VirusTotal scans"
+            echo
+            if [ -n "$VT_ANALYSIS" ]; then
+              echo "| Package | Report |"
+              echo "| --- | --- |"
+              echo "$VT_ANALYSIS" | tr ',' '\n' | while IFS='=' read -r file url; do
+                [ -n "$file" ] || continue
+                echo "| \`$(basename "$file")\` | [analysis]($url) |"
+              done
+            else
+              echo "_Scan unavailable for this release._"
+            fi
+          } > release-body.md
+
       - name: Release
         uses: softprops/action-gh-release@v3
         with:
+          body_path: release-body.md
           files: "dist/*.zip"
