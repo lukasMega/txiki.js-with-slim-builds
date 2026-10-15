@@ -6,7 +6,7 @@
 
 [![views](https://tst.lukasmega.deno.net/badge?site=txiki&total=1&label=docs%20views%2030d%20%2B%20all)](https://lukasmega.github.io/deno-kv-analytics/badge)
 
-> **txikia** (Basque): small, tiny.
+> **txiki** /ˈtʃiki/ (Basque): small, tiny.
 
 *txiki.js* is a small and powerful JavaScript runtime. It targets state-of-the-art ECMAScript
 and aims to be [WinterTC] compliant.
