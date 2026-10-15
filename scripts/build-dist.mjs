@@ -585,6 +585,12 @@ function bundleSpecs() {
             prefix: 'tjs__',
         },
         {
+            js: 'src/js/internal/home.js',
+            c: 'src/bundles/c/internal/home.c',
+            module: 'tjs:internal/home',
+            prefix: 'tjs__internal_',
+        },
+        {
             js: 'src/js/internal/path.js',
             c: 'src/bundles/c/internal/path.c',
             module: 'tjs:internal/path',
