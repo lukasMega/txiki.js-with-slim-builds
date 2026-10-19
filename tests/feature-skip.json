@@ -16,6 +16,9 @@
     "test-fetch-h2-*.js",
     "test-fetch-h3-*.js",
     "test-serve-h2-*.js",
+    "test-serve-h3-*.js",
+    "test-serve-streaming-body-cancel.js",
+    "test-fetch-connection-specific-headers.js",
     "test-fetch-alpn-no-h3-over-tcp.js",
     "test-fetch-pooled-custom-headers.js",
     "test-serve-empty-request-body.js",
@@ -26,11 +29,14 @@
   ],
   "webcrypto": [
     "test-webcrypto-*.js",
-    "test-app-compile.js"
+    "test-app-compile.js",
+    "test-app-compile-corrupted-cache.js"
   ],
   "ffi": [
     "test-ffi-*.js",
-    "test-dispose-ffi-dlopen.js"
+    "test-dispose-ffi-dlopen.js",
+    "test-sab-alignment.js",
+    "test-worker-ffi-classes.js"
   ],
   "cli.eval": [
     "test-console-*.js",
@@ -54,7 +60,8 @@
     "test-compile.js"
   ],
   "cli.app": [
-    "test-app-compile.js"
+    "test-app-compile.js",
+    "test-app-compile-corrupted-cache.js"
   ],
   "cli.help": [
     "test-cli-help.js"

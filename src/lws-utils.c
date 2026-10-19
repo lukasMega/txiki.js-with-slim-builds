@@ -58,6 +58,19 @@ void tjs__lws_format_host(char *buf, size_t buflen, const char *scheme, const ch
     }
 }
 
+/* Format the origin-form request path of url into buf. It is derived from the
+ * original string because lws_parse_uri_create() strips one leading '/' from
+ * the path except when nothing would remain, so its path is ambiguous: "/" can
+ * come from "", "/" or "//". The authority ends at the first '/' or '?', the
+ * same place lws's host/port scan stops. */
+void tjs__lws_request_path(const char *url, char *buf, size_t buflen) {
+    const char *p = strstr(url, "://");
+    p = p ? p + 3 : url;
+    p += strcspn(p, "/?");
+
+    lws_snprintf(buf, buflen, "%s%s", *p == '/' ? "" : "/", p);
+}
+
 #define TJS_LWS_HTTP_LOAD_PROTOCOL_NAME "tjs-http-load"
 
 typedef struct {
@@ -180,6 +193,16 @@ void tjs__lws_setup(void) {
      * later would free early allocations with the wrong free function. */
     lws_set_allocator(tjs__lws_realloc);
     lws_set_log_level(0, NULL);
+}
+
+/* Called at runtime creation rather than from tjs__lws_init: module loading
+ * over http (tjs__lws_load_http) creates a one-shot lws context that may come
+ * before the runtime's main lws context exists. Mirrors lws's global log
+ * context after lws_set_log_level(0, NULL) above, so logs stay off. */
+void tjs__lws_init_log_cx(TJSRuntime *qrt) {
+    memset(&qrt->lws.log_cx, 0, sizeof(qrt->lws.log_cx));
+    qrt->lws.log_cx.u.emit = lwsl_emit_stderr;
+    qrt->lws.log_cx.lll_flags = 0;
 }
 
 #ifdef TJS_HAVE_TLS
@@ -435,6 +458,7 @@ static struct lws_vhost *tjs__create_client_vhost(TJSRuntime *qrt, const char *n
      */
     vinfo.options = LWS_SERVER_OPTION_H2_JUST_FIX_WINDOW_UPDATE_OVERFLOW;
     vinfo.vhost_name = name;
+    vinfo.log_cx = &qrt->lws.log_cx;
     /*
      * ALPN list offered on TLS-over-TCP client handshakes.  lws derives its
      * default from the enabled roles, which on an HTTP/3-capable build means
@@ -501,9 +525,10 @@ static void tjs__lws_init(TJSRuntime *qrt) {
     void *foreign_loops[1] = { &qrt->loop };
     info.foreign_loops = foreign_loops;
 
-    /* Cookie jar is context-level in lws, must be set here. */
-    CHECK_NOT_NULL(qrt->lws.cookie_jar_path);
+    /* Cookie jar is context-level in lws, must be set here. It may be NULL for
+     * runtimes not created through run-main (embedders): lws then doesn't persist cookies. */
     info.http_nsc_filepath = qrt->lws.cookie_jar_path;
+    info.log_cx = &qrt->lws.log_cx;
 
     qrt->lws.ctx = lws_create_context(&info);
 
@@ -539,11 +564,16 @@ static void tjs__lws_init(TJSRuntime *qrt) {
             qrt->lws.vh_https_proxy = tjs__create_client_vhost(qrt, "tjs-https-proxy", &https_proxy);
         }
     }
+}
 
-    /* Keepalive handle: stays unrefed when idle so the loop can exit,
-     * gets refed while client connections are in flight to prevent
-     * the loop from exiting during async DNS resolution. */
-    uv_async_init(&qrt->loop, &qrt->lws.keepalive, tjs__lws_keepalive_cb);
+void tjs__lws_keepalive_init(TJSRuntime *qrt) {
+    /* Stays unrefed when idle so the loop can exit, gets refed while client
+     * connections are in flight to prevent the loop from exiting during async
+     * DNS resolution. Owned by the runtime rather than the lazily (re)created
+     * lws context: JS running during the teardown drain can re-create the
+     * context while a previous close of this handle is still pending, and
+     * re-initializing a closing handle corrupts the loop's handle queue. */
+    CHECK_EQ(uv_async_init(&qrt->loop, &qrt->lws.keepalive, tjs__lws_keepalive_cb), 0);
     uv_unref((uv_handle_t *) &qrt->lws.keepalive);
     qrt->lws.active_conns = 0;
 }
@@ -657,9 +687,8 @@ static int tjs__lws_load_http_once(TJSRuntime *qrt, TJSHttpLoadCtx *load_ctx, co
     bool use_ssl = false;
 #endif
 
-    /* The parsed path has the leading '/' stripped, restore it. */
     char full_path[TJS_PATH_MAX];
-    snprintf(full_path, sizeof(full_path), "/%s", uri->path);
+    tjs__lws_request_path(url, full_path, sizeof(full_path));
 
     /* Resolve DNS synchronously.  The lws async DNS resolver is
      * unreliable in a temporary poll-based context. */
@@ -697,6 +726,7 @@ static int tjs__lws_load_http_once(TJSRuntime *qrt, TJSHttpLoadCtx *load_ctx, co
     /* See tjs__create_client_vhost: tolerate h2 servers that overflow the
      * connection-level window (e.g. Cloudflare) instead of dropping them. */
     info.options = LWS_SERVER_OPTION_H2_JUST_FIX_WINDOW_UPDATE_OVERFLOW;
+    info.log_cx = &qrt->lws.log_cx;
 #ifdef TJS_HAVE_TLS
     info.options |= LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
     tjs__set_ca_info(qrt, &info);

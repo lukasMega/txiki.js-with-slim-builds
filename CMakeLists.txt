@@ -171,6 +171,10 @@ if(UNIX)
     target_sources(tjs PRIVATE src/mod_posix-socket.c)
 endif()
 
+if(WIN32)
+    target_sources(tjs PRIVATE src/mbedtls_threading_win32.c)
+endif()
+
 if(BUILD_WITH_WASM)
     target_sources(tjs PRIVATE src/wasm.c)
     target_compile_definitions(tjs PRIVATE TJS_HAVE_WASM)
@@ -444,6 +448,11 @@ endfunction()
 tjs_apply_patches("${CMAKE_CURRENT_SOURCE_DIR}/deps/mbedtls" "mbedtls-")
 
 add_subdirectory(deps/mbedtls EXCLUDE_FROM_ALL)
+if(WIN32)
+    # threading_alt.h for MBEDTLS_THREADING_ALT. PUBLIC so every target that
+    # includes mbedtls headers (mbedx509, mbedtls, websockets, tjs) sees it.
+    target_include_directories(mbedcrypto PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src/mbedtls_alt)
+endif()
 tjs_slim_link_mbedtls()
 
 if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
@@ -544,6 +553,14 @@ set(LWS_MBEDTLS_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/deps/mbedtls/include" 
 #   - lws-mbedtls-client-alpn-uaf.patch: stack-use-after-scope in
 #     lws_ssl_client_bio_create() on the QUIC->TCP HTTP/3 fallback path
 #     (warmcat/libwebsockets#3658).
+#   - lws-windows-fds-racer-owner.patch: Windows fd lookup ignored
+#     happy-eyeballs racer sockets, leaving a stale position_in_fds_table
+#     (pollfd.c assert / hang); upstream c6f480f54 on main, not yet in
+#     v5.0-stable.
+#   - lws-vhost-inherit-context-log-cx.patch: a vhost created without
+#     info->log_cx (e.g. lws's internal "system" vhost) bound to the global
+#     log context instead of its context's, so per-runtime log contexts still
+#     raced on the global one's unlocked refcount across Worker threads.
 tjs_apply_patches("${CMAKE_CURRENT_SOURCE_DIR}/deps/libwebsockets" "lws-")
 
 tjs_slim_lws_options()

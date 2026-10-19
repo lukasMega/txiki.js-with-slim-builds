@@ -62,6 +62,7 @@
 #endif
 
 typedef struct TJSTimer TJSTimer;
+typedef struct TJSBufPin TJSBufPin;
 
 typedef struct {
     struct list_head link;
@@ -87,6 +88,13 @@ typedef struct TJSHandlePin {
     JSValue obj;
     void (*detach)(struct TJSHandlePin *pin);
 } TJSHandlePin;
+
+/* Counted self-pin held while libuv requests (write, shutdown, send) are in
+ * flight on a handle. Separate from the handle's read/listen/connect pin. */
+typedef struct {
+    TJSHandlePin pin;
+    unsigned int count;
+} TJSReqPin;
 
 /* Native classes. Their JSClassIDs are allocated per runtime (TJSRuntime.class_ids),
  * since each runtime numbers its classes independently. */
@@ -164,6 +172,11 @@ struct TJSRuntime {
         unsigned int ca_bundle_len;
         uv_async_t keepalive;
         int active_conns;
+        /* Every lws context, vhost and wsi of this runtime binds to it. lws
+         * refcounts its log context without a lock (LWS_MAX_SMP == 1), so
+         * runtimes on different threads must not share lws's global one. It
+         * must outlive all of them: see the assert in TJS_FreeRuntime. */
+        lws_log_cx_t log_cx;
     } lws;
     struct {
         TJSTimer *timers;
@@ -192,6 +205,8 @@ struct TJSRuntime {
     /* Self-pins of all active native handles (TJSHandlePin), so teardown can
      * drop them and let the final GC collect and close the handles. */
     struct list_head handle_pins;
+    /* Pin counts of the ArrayBuffers native requests are using (TJSBufferRef). */
+    TJSBufPin *buf_pins;
     JSClassID class_ids[TJS_CLASS__COUNT];
 };
 
@@ -212,12 +227,19 @@ int tjs__class_register(JSContext *ctx, TJSClass c, const JSClassDef *def);
  * already-pinned handle or unpinning an idle one is a no-op. */
 void tjs__handle_pin(JSContext *ctx, TJSHandlePin *pin, JSValue obj);
 void tjs__handle_unpin(JSContext *ctx, TJSHandlePin *pin);
+/* Count one in-flight request; the first one pins `obj` (borrowed). Call only
+ * once libuv has accepted the request. An undefined `obj` only counts. */
+void tjs__req_pin_acquire(JSContext *ctx, TJSReqPin *rp, JSValue obj);
+/* Release one request; the last one unpins, which may finalize the wrapper, so
+ * it must be the last thing the request's callback does. */
+void tjs__req_pin_release(JSContext *ctx, TJSReqPin *rp);
 /* Teardown, before the lws context is destroyed: run each registered pin's
  * `detach` hook (no-op for pins without one) so lws-backed wrappers stop
  * dispatching to JS before their close callbacks fire. */
 void tjs__detach_handles(TJSRuntime *qrt);
 /* Teardown: drop every registered self-pin so the objects become collectable. */
 void tjs__release_pins(TJSRuntime *qrt);
+void tjs__free_buf_pins(TJSRuntime *qrt);
 
 void tjs__mod_channel_init(JSContext *ctx, JSValue ns);
 
@@ -230,6 +252,8 @@ bool tjs__channel_mailbox_pair(TJSMailbox **a, TJSMailbox **b);
 JSValue tjs__channel_port_new(JSContext *ctx, TJSMailbox *rx, TJSMailbox *tx);
 void tjs__channel_mailbox_unref(TJSMailbox *mb);
 void tjs__channel_port_close(JSRuntime *rt, JSValue port_handle);
+void tjs__channel_port_flush(JSRuntime *rt, JSValue port_handle);
+void tjs__channel_port_unref(JSRuntime *rt, JSValue port_handle);
 void tjs__channel_port_post_error(JSContext *ctx, JSValue port_handle, JSValueConst error_obj);
 
 void tjs__mod_dns_init(JSContext *ctx, JSValue ns);
@@ -312,11 +336,17 @@ extern const lws_plugin_evlib_t tjs_lws_evlib;
 
 struct lws_context *tjs__lws_get_context(JSContext *ctx);
 void tjs__lws_setup(void);
+void tjs__lws_init_log_cx(TJSRuntime *qrt);
+void tjs__lws_keepalive_init(TJSRuntime *qrt);
+#ifdef _WIN32
+void tjs__mbedtls_threading_init(void);
+#endif
 void tjs__lws_conn_ref(JSContext *ctx);
 void tjs__lws_conn_unref(JSContext *ctx);
 struct lws_vhost *tjs__lws_select_vhost(JSContext *ctx, const char *scheme, const char *hostname, int port);
 int tjs__lws_load_http(TJSRuntime *qrt, TBuf *dbuf, const char *url);
 void tjs__lws_format_host(char *buf, size_t buflen, const char *scheme, const char *host, int port);
+void tjs__lws_request_path(const char *url, char *buf, size_t buflen);
 
 uv_loop_t *TJS_GetLoop(TJSRuntime *qrt);
 TJSRuntime *TJS_NewRuntimeWorker(void);

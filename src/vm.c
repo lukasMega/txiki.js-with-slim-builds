@@ -90,26 +90,23 @@ static const JSMallocFunctions tjs_mf = {
 /* SharedArrayBuffer functions */
 
 typedef struct {
-    int ref_count;
+    /* 64-bit so that buf is 8-byte aligned, as required by 8-byte typed arrays. */
+    _Atomic(int64_t) ref_count;
     uint8_t buf[0];
 } TJSSABHeader;
-
-static int atomic_add_int(int *ptr, int v) {
-    return atomic_fetch_add((_Atomic(uint32_t) *) ptr, v) + v;
-}
 
 static void *tjs__sab_alloc(void *opaque, size_t size) {
     TJSSABHeader *sab = tjs__malloc(sizeof(*sab) + size);
     if (!sab) {
         return NULL;
     }
-    sab->ref_count = 1;
+    atomic_init(&sab->ref_count, 1);
     return sab->buf;
 }
 
 void tjs__sab_free(void *opaque, void *ptr) {
     TJSSABHeader *sab = (TJSSABHeader *) ((uint8_t *) ptr - sizeof(TJSSABHeader));
-    int ref_count = atomic_add_int(&sab->ref_count, -1);
+    int64_t ref_count = atomic_fetch_sub(&sab->ref_count, 1) - 1;
     assert(ref_count >= 0);
     if (ref_count == 0) {
         tjs__free(sab);
@@ -118,7 +115,7 @@ void tjs__sab_free(void *opaque, void *ptr) {
 
 void tjs__sab_dup(void *opaque, void *ptr) {
     TJSSABHeader *sab = (TJSSABHeader *) ((uint8_t *) ptr - sizeof(TJSSABHeader));
-    atomic_add_int(&sab->ref_count, 1);
+    atomic_fetch_add(&sab->ref_count, 1);
 }
 
 static const JSSharedArrayBufferFunctions tjs_sf = {
@@ -482,10 +479,26 @@ TJSRuntime *TJS_NewRuntimeWorker(void) {
     return TJS_NewRuntimeInternal(true, &options);
 }
 
+static uv_once_t tjs__global_once = UV_ONCE_INIT;
+
+/* Process-wide library setup. Runs once, from the first runtime (the main
+ * thread's), before anything can touch mbedtls or lws; Workers' runtimes must
+ * not redo it while other threads are already using those libraries. */
+static void tjs__global_init(void) {
+#ifdef _WIN32
+    tjs__mbedtls_threading_init();
+#endif
+    tjs__lws_setup();
+}
+
 TJSRuntime *TJS_NewRuntimeInternal(bool is_worker, TJSRunOptions *options) {
+    uv_once(&tjs__global_once, tjs__global_init);
+
     JSRuntime *rt = NULL;
     JSContext *ctx = NULL;
     TJSRuntime *qrt = tjs__mallocz(sizeof(*qrt));
+
+    tjs__lws_init_log_cx(qrt);
 
     memcpy(&qrt->options, options, sizeof(*options));
 
@@ -534,6 +547,8 @@ TJSRuntime *TJS_NewRuntimeInternal(bool is_worker, TJSRunOptions *options) {
     /* handle for stopping this runtime (also works from another thread) */
     CHECK_EQ(uv_async_init(&qrt->loop, &qrt->stop, uv__stop), 0);
     qrt->stop.data = qrt;
+
+    tjs__lws_keepalive_init(qrt);
 
     /* loader for ES modules */
     JS_SetModuleLoaderFunc2(rt, tjs_module_normalizer, tjs_module_loader, tjs_module_attr_checker, qrt);
@@ -590,9 +605,6 @@ TJSRuntime *TJS_NewRuntimeInternal(bool is_worker, TJSRunOptions *options) {
     /* Active native-handle self-pins (for teardown). */
     init_list_head(&qrt->handle_pins);
 
-    /* libwebsockets initializtion */
-    tjs__lws_setup();
-
     return qrt;
 }
 
@@ -615,7 +627,23 @@ void tjs__handle_unpin(JSContext *ctx, TJSHandlePin *pin) {
     }
 }
 
-/* Run every registered pin's `detach` hook at the very start of teardown. The
+void tjs__req_pin_acquire(JSContext *ctx, TJSReqPin *rp, JSValue obj) {
+    if (rp->count++ == 0 && !JS_IsUndefined(obj)) {
+        tjs__handle_pin(ctx, &rp->pin, obj);
+    }
+}
+
+/* After tjs__release_pins has dropped the pin at teardown, the remaining
+ * releases only decrement the count (unpinning an idle pin is a no-op). */
+void tjs__req_pin_release(JSContext *ctx, TJSReqPin *rp) {
+    CHECK_GT(rp->count, 0);
+    if (--rp->count == 0) {
+        tjs__handle_unpin(ctx, &rp->pin);
+    }
+}
+
+/* Run every registered pin's `detach` hook at the very start of teardown (and
+ * again from the drain, for pins JS registered after this first pass). The
  * hook quiesces the handle so nothing dispatches into the half-torn-down
  * runtime, but its exact job differs by who owns the handle's close:
  *  - lws-backed handles (httpclient, ws): lws owns the close
@@ -643,7 +671,8 @@ void tjs__release_pins(TJSRuntime *qrt) {
      * list into a local head first, then release each entry: a wrapper stays
      * alive via its own pin until we free it, so the move frees nothing, and the
      * release pass no longer walks the shared list — a cascading finalizer that
-     * touches handle_pins can't corrupt the traversal. */
+     * touches handle_pins can't corrupt the traversal. This runs again for each
+     * drain iteration of TJS_FreeRuntime that finds pins JS registered late. */
     struct list_head pins;
     list_splice_init(&pins, &qrt->handle_pins);
     while (!list_empty(&pins)) {
@@ -653,6 +682,53 @@ void tjs__release_pins(TJSRuntime *qrt) {
         pin->obj = JS_UNDEFINED;
         JS_FreeValue(qrt->ctx, obj);
     }
+}
+
+/* Safe to call again: a fetch / WebSocket / serve during the teardown drain
+ * lazily re-creates the context (tjs__lws_init), which also re-parses
+ * no_proxy. Must not run inside an lws callback (see lws-evlib.c). */
+static void tjs__lws_teardown(TJSRuntime *qrt) {
+    if (qrt->lws.ctx) {
+        lws_context_destroy(qrt->lws.ctx);
+        qrt->lws.ctx = NULL;
+    }
+
+    for (int i = 0; i < qrt->lws.no_proxy_count; i++) {
+        js_free(qrt->ctx, qrt->lws.no_proxy_entries[i]);
+    }
+    js_free(qrt->ctx, qrt->lws.no_proxy_entries);
+    qrt->lws.no_proxy_entries = NULL;
+    qrt->lws.no_proxy_count = 0;
+
+    js_free(qrt->ctx, qrt->lws.cookie_jar_path);
+    qrt->lws.cookie_jar_path = NULL;
+    js_free(qrt->ctx, qrt->lws.ca_bundle_path);
+    qrt->lws.ca_bundle_path = NULL;
+    js_free(qrt->ctx, qrt->lws.ca_bundle_data);
+    qrt->lws.ca_bundle_data = NULL;
+}
+
+/* Repeat the teardown steps of TJS_FreeRuntime, in the same order, for
+ * whatever JS created during the previous drain iteration. */
+static bool tjs__reap_late_resources(TJSRuntime *qrt) {
+    bool found = false;
+    if (!list_empty(&qrt->handle_pins)) {
+        tjs__detach_handles(qrt);
+        found = true;
+    }
+    if (qrt->timers.timers) {
+        tjs__destroy_timers(qrt);
+        found = true;
+    }
+    if (qrt->lws.ctx) {
+        tjs__lws_teardown(qrt);
+        found = true;
+    }
+    if (found) {
+        tjs__release_pins(qrt);
+        JS_RunGC(qrt->rt);
+    }
+    return found;
 }
 
 void TJS_FreeRuntime(TJSRuntime *qrt) {
@@ -689,31 +765,16 @@ void TJS_FreeRuntime(TJSRuntime *qrt) {
     uv_close((uv_handle_t *) &qrt->jobs.idle, NULL);
     uv_close((uv_handle_t *) &qrt->jobs.check, NULL);
     uv_close((uv_handle_t *) &qrt->stop, NULL);
+    /* An lws context JS re-creates during the drain below only refs/unrefs
+     * keepalive, which libuv ignores on a closing or closed handle. */
+    uv_close((uv_handle_t *) &qrt->lws.keepalive, NULL);
 
     /* Destroy all timers */
     tjs__destroy_timers(qrt);
 
     /* Destroy lws context. Must happen before freeing the JS engine
      * so that any remaining WSI_DESTROY callbacks can release GC refs. */
-    if (qrt->lws.ctx) {
-        lws_context_destroy(qrt->lws.ctx);
-        qrt->lws.ctx = NULL;
-        uv_close((uv_handle_t *) &qrt->lws.keepalive, NULL);
-    }
-
-    for (int i = 0; i < qrt->lws.no_proxy_count; i++) {
-        js_free(qrt->ctx, qrt->lws.no_proxy_entries[i]);
-    }
-    js_free(qrt->ctx, qrt->lws.no_proxy_entries);
-    qrt->lws.no_proxy_entries = NULL;
-    qrt->lws.no_proxy_count = 0;
-
-    js_free(qrt->ctx, qrt->lws.cookie_jar_path);
-    qrt->lws.cookie_jar_path = NULL;
-    js_free(qrt->ctx, qrt->lws.ca_bundle_path);
-    qrt->lws.ca_bundle_path = NULL;
-    js_free(qrt->ctx, qrt->lws.ca_bundle_data);
-    qrt->lws.ca_bundle_data = NULL;
+    tjs__lws_teardown(qrt);
 
     /* Drop the GC-invisible self-pins that keep actively reading/listening/
      * running native handles alive (set on an abnormal exit, when JS never
@@ -723,10 +784,20 @@ void TJS_FreeRuntime(TJSRuntime *qrt) {
      * `finalized` flag that suppresses dispatch during the drain below. Draining
      * the loop here — while the runtime and the shared TLS context are still
      * alive — lets the resulting close (and any canceled request) callbacks run
-     * safely, before anything they might touch is torn down. */
+     * safely, before anything they might touch is torn down.
+     *
+     * Those callbacks still run JS on reachable wrappers (e.g. a canceled write
+     * rejects its promise), and that JS can create pins, timers or a fresh lws
+     * context after the steps above already ran. So each iteration first reaps
+     * whatever the previous one left behind. JS that keeps creating resources
+     * on every one of the 32 iterations still leaks them; that takes
+     * adversarial code and is accepted. */
     tjs__release_pins(qrt);
     JS_RunGC(qrt->rt);
-    for (int i = 0; i < 32 && uv_loop_alive(&qrt->loop); i++) {
+    for (int i = 0; i < 32; i++) {
+        if (!tjs__reap_late_resources(qrt) && !uv_loop_alive(&qrt->loop)) {
+            break;
+        }
         uv_run(&qrt->loop, UV_RUN_NOWAIT);
     }
 
@@ -747,6 +818,9 @@ void TJS_FreeRuntime(TJSRuntime *qrt) {
     JS_FreeContext(qrt->ctx);
     /* Finalizers look up class ids in qrt, so free qrt only after this. */
     JS_FreeRuntime(qrt->rt);
+
+    /* Requests left uncompleted by an abnormal exit can leave pins behind. */
+    tjs__free_buf_pins(qrt);
 
 #ifdef TJS_HAVE_WASM
     /* Destroy WASM runtime. */
@@ -773,6 +847,10 @@ void TJS_FreeRuntime(TJSRuntime *qrt) {
 #else
     (void) closed;
 #endif
+
+    /* Every lws object bound to the runtime's log context is gone: lws
+     * finalizes them all inside lws_context_destroy (see lws-evlib.c). */
+    assert(qrt->lws.log_cx.refcount == 0);
 
     tjs__free(qrt);
 }
@@ -906,25 +984,29 @@ void tjs__execute_jobs(JSContext *ctx) {
         args[2] = pr->reason;
 
         JSValue event = JS_CallConstructor(ctx, qrt->builtins.promise_event_ctor, countof(args), args);
-        CHECK_EQ(JS_IsException(event), 0);
-        JSValue ret = tjs__dispatch_event(ctx, &event);
-
-        JS_FreeValue(ctx, event);
         JS_FreeValue(ctx, event_name);
 
         bool should_abort = false;
 
-        if (JS_IsException(ret)) {
+        /* User code can break the event constructor (e.g. by overwriting
+         * globals it uses), so treat that as an unhandled rejection. */
+        if (JS_IsException(event)) {
             tjs_dump_error(ctx);
             should_abort = true;
         } else {
-            if (JS_ToBool(ctx, ret)) {
+            JSValue ret = tjs__dispatch_event(ctx, &event);
+            JS_FreeValue(ctx, event);
+
+            if (JS_IsException(ret)) {
+                tjs_dump_error(ctx);
+                should_abort = true;
+            } else if (JS_ToBool(ctx, ret)) {
                 /* The event wasn't cancelled, abort. */
                 should_abort = true;
             }
-        }
 
-        JS_FreeValue(ctx, ret);
+            JS_FreeValue(ctx, ret);
+        }
 
         if (should_abort) {
             JSValue reason = pr->reason;
@@ -940,8 +1022,9 @@ void tjs__execute_jobs(JSContext *ctx) {
                 js_free(ctx, pr2);
             }
             /* In a worker, an unhandled rejection that aborts the runtime should
-             * also reach the parent. The 'unhandledrejection' event already
-             * fired at the worker global, so just forward the reason. */
+             * also reach the parent. The 'unhandledrejection' event was already
+             * dispatched at the worker global (or could not be constructed), so
+             * just forward the reason. */
             if (qrt->is_worker) {
                 tjs__worker_post_error(ctx, reason);
             }
@@ -976,14 +1059,13 @@ static bool tjs__fire_beforeunload(TJSRuntime *qrt) {
     JSValue ret = JS_Eval(ctx, code, strlen(code), "<beforeunload>", JS_EVAL_TYPE_GLOBAL);
     bool prevented = false;
 
-    if (JS_IsException(ret)) {
-        tjs_dump_error(ctx);
-        goto end;
+    /* dispatchEvent reports listener errors itself, so an exception here means
+     * the dispatch failed (e.g. a broken Event or dispatchEvent). Leave it
+     * pending so TJS_Run reports it once and exits with an error. */
+    if (!JS_IsException(ret)) {
+        prevented = JS_ToBool(ctx, ret);
     }
 
-    prevented = JS_ToBool(ctx, ret);
-
-end:
     JS_FreeValue(ctx, ret);
     return prevented;
 }
@@ -1014,10 +1096,17 @@ int TJS_Run(TJSRuntime *qrt) {
         do {
             uv__maybe_idle(qrt);
             r = uv_run(&qrt->loop, UV_RUN_DEFAULT);
-        } while (r == 0 && JS_IsJobPending(qrt->rt));
+        } while (r == 0 && JS_IsJobPending(qrt->rt) && !JS_HasException(qrt->ctx));
 
         /* Only fire beforeunload for main runtime, not workers. */
         if (qrt->is_worker) {
+            break;
+        }
+
+        /* A fatal error (unhandled rejection or uncaught exception) stopped the
+         * loop: skip beforeunload and keep the pending exception for the report
+         * below. */
+        if (JS_HasException(qrt->ctx)) {
             break;
         }
 

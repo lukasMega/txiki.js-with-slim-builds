@@ -173,6 +173,7 @@ typedef struct {
     JSValue callback;                   /* JS onrequest handler */
     JSValue body_chunk_callback;        /* JS onBodyChunk handler for streaming bodies */
     JSValue close_callback;             /* JS onClose, invoked when lws fires PROTOCOL_DESTROY */
+    JSValue request_close_callback;     /* JS onRequestClose: an unfinished request's connection closed */
     JSValue ws_callbacks[WS_EVENT_MAX]; /* server-level: open, message, close, error */
     struct lws_vhost *vhost;
     struct lws_vhost *quic_vhost; /* HTTP/3 (QUIC/UDP) vhost, or NULL if h3 off */
@@ -195,6 +196,9 @@ typedef struct {
     char *ssl_ca_mem;
     char *ssl_passphrase;
     char *alpn; /* explicit ALPN protocol list (e.g. "h2"), or NULL for lws default */
+    /* Per-server iface label for the QUIC vhost (see the constructor). lws
+     * keeps the pointer, so it lives here, as long as the vhost. */
+    char quic_iface[32];
 } TJSHttpServer;
 
 static void tjs_http_req_free(JSRuntime *rt, TJSHttpRequest *req) {
@@ -287,6 +291,9 @@ static void tjs_httpserver_detach(TJSHandlePin *pin) {
     JS_FreeValue(s->ctx, s->close_callback);
     s->close_callback = JS_UNDEFINED;
 
+    JS_FreeValue(s->ctx, s->request_close_callback);
+    s->request_close_callback = JS_UNDEFINED;
+
     for (int i = 0; i < WS_EVENT_MAX; i++) {
         JS_FreeValue(s->ctx, s->ws_callbacks[i]);
         s->ws_callbacks[i] = JS_UNDEFINED;
@@ -300,6 +307,7 @@ static void tjs_httpserver_finalizer(JSRuntime *rt, JSValue val) {
         JS_FreeValueRT(rt, s->callback);
         JS_FreeValueRT(rt, s->body_chunk_callback);
         JS_FreeValueRT(rt, s->close_callback);
+        JS_FreeValueRT(rt, s->request_close_callback);
 
         for (int i = 0; i < WS_EVENT_MAX; i++) {
             JS_FreeValueRT(rt, s->ws_callbacks[i]);
@@ -343,6 +351,7 @@ static void tjs_httpserver_mark(JSRuntime *rt, JSValue val, JS_MarkFunc *mark_fu
         JS_MarkValue(rt, s->callback, mark_func);
         JS_MarkValue(rt, s->body_chunk_callback, mark_func);
         JS_MarkValue(rt, s->close_callback, mark_func);
+        JS_MarkValue(rt, s->request_close_callback, mark_func);
         for (int i = 0; i < WS_EVENT_MAX; i++) {
             JS_MarkValue(rt, s->ws_callbacks[i], mark_func);
         }
@@ -1256,9 +1265,18 @@ static int tjs_http_callback(struct lws *wsi, enum lws_callback_reasons reason, 
                 JS_FreeValue(s->ctx, cb_args[0]);
             }
 
+            uint64_t req_id = req->id;
             HASH_DEL(s->active_requests, req);
             tjs_http_req_free(JS_GetRuntime(s->ctx), req);
             lws_set_wsi_user(wsi, NULL);
+
+            /* Last: the handler may run user code (e.g. close the server), so
+             * neither req nor wsi may be used after it. */
+            if (JS_IsFunction(s->ctx, s->request_close_callback)) {
+                JSValue arg = JS_NewInt64(s->ctx, req_id);
+                tjs_call_handler(s->ctx, s->request_close_callback, 1, &arg);
+                JS_FreeValue(s->ctx, arg);
+            }
             return 0;
         }
 
@@ -1274,6 +1292,8 @@ static int tjs_http_callback(struct lws *wsi, enum lws_callback_reasons reason, 
                 return 0;
             }
 
+            /* We are inside lws's vhost teardown: onClose must not re-enter lws
+             * (e.g. create a vhost), so the JS side defers its work. */
             if (JS_IsFunction(s->ctx, s->close_callback)) {
                 JSValue cb = s->close_callback;
                 s->close_callback = JS_UNDEFINED;
@@ -1422,6 +1442,7 @@ static JSValue tjs_httpserver_constructor(JSContext *ctx, JSValue new_target, in
     s->callback = JS_UNDEFINED;
     s->body_chunk_callback = JS_UNDEFINED;
     s->close_callback = JS_UNDEFINED;
+    s->request_close_callback = JS_UNDEFINED;
     s->pin.obj = JS_UNDEFINED;
     s->pin.detach = tjs_httpserver_detach;
     for (int i = 0; i < WS_EVENT_MAX; i++) {
@@ -1456,6 +1477,13 @@ static JSValue tjs_httpserver_constructor(JSContext *ctx, JSValue new_target, in
     JSValue js_body_chunk = JS_GetPropertyStr(ctx, options, "onBodyChunk");
     CHECK(JS_IsFunction(ctx, js_body_chunk));
     s->body_chunk_callback = js_body_chunk;
+
+    JSValue js_request_close = JS_GetPropertyStr(ctx, options, "onRequestClose");
+    if (JS_IsFunction(ctx, js_request_close)) {
+        s->request_close_callback = js_request_close;
+    } else {
+        JS_FreeValue(ctx, js_request_close);
+    }
 
     /* Close callback, fired once lws is fully done draining the vhost
      * (i.e. LWS_CALLBACK_PROTOCOL_DESTROY). */
@@ -1558,6 +1586,8 @@ static JSValue tjs_httpserver_constructor(JSContext *ctx, JSValue new_target, in
         JS_FreeValue(ctx, obj);
         return JS_ThrowInternalError(ctx, "failed to get lws context");
     }
+    TJSRuntime *qrt = TJS_GetRuntime(ctx);
+    CHECK_NOT_NULL(qrt);
 
     /* Use a mutable protocol name so we can swap it during WS upgrades
      * to match the negotiated subprotocol. */
@@ -1573,6 +1603,7 @@ static JSValue tjs_httpserver_constructor(JSContext *ctx, JSValue new_target, in
     vhost_info.protocols = protocols;
     vhost_info.user = s;
     vhost_info.vhost_name = "tjs-http-server";
+    vhost_info.log_cx = &qrt->lws.log_cx;
     vhost_info.options = 0;
 
 #ifdef TJS_HAVE_TLS
@@ -1643,6 +1674,7 @@ static JSValue tjs_httpserver_constructor(JSContext *ctx, JSValue new_target, in
         qinfo.protocols = protocols;
         qinfo.user = s;
         qinfo.vhost_name = "tjs-http-server-h3";
+        qinfo.log_cx = &qrt->lws.log_cx;
         qinfo.options = LWS_SERVER_OPTION_DO_SSL_GLOBAL_INIT;
         qinfo.server_ssl_cert_mem = s->ssl_cert_mem;
         qinfo.server_ssl_cert_mem_len = (unsigned int) strlen(s->ssl_cert_mem);
@@ -1654,6 +1686,14 @@ static JSValue tjs_httpserver_constructor(JSContext *ctx, JSValue new_target, in
         qinfo.listen_accept_role = "quic";
         qinfo.listen_accept_protocol = s->ws_protocol_name;
         qinfo.alpn = "h3,lws-quic";
+        /* lws treats vhosts with equal iface and port as sharing a listener,
+         * and on destroy hands the listen sockets, here the QUIC UDP socket,
+         * to such a sibling. Every QUIC vhost has no iface and the same
+         * no-listen port, so closing one of two h3 servers moved its UDP
+         * socket onto the other and freed lists the socket was still on. A
+         * per-server label keeps each QUIC vhost to itself. */
+        snprintf(s->quic_iface, sizeof(s->quic_iface), "tjs-h3-%p", (void *) s);
+        qinfo.iface = s->quic_iface;
 
         s->quic_vhost = lws_create_vhost(lws_ctx, &qinfo);
         if (!s->quic_vhost || !lws_create_adopt_udp(s->quic_vhost,
@@ -1689,7 +1729,7 @@ static JSValue tjs_httpserver_constructor(JSContext *ctx, JSValue new_target, in
             s->vhost = NULL;
             JS_FreeCString(ctx, listen_ip);
             JS_FreeValue(ctx, obj);
-            return JS_ThrowInternalError(ctx, "failed to create HTTP/3 (QUIC) listener");
+            return JS_ThrowInternalError(ctx, "failed to create HTTP/3 (QUIC) listener on port %d", s->port);
         }
 
         s->vhost_count = 2;
@@ -1736,6 +1776,9 @@ static JSValue tjs_httpserver_close(JSContext *ctx, JSValue this_val, int argc, 
 
     JS_FreeValue(ctx, s->body_chunk_callback);
     s->body_chunk_callback = JS_UNDEFINED;
+
+    JS_FreeValue(ctx, s->request_close_callback);
+    s->request_close_callback = JS_UNDEFINED;
 
     for (int i = 0; i < WS_EVENT_MAX; i++) {
         JS_FreeValue(ctx, s->ws_callbacks[i]);
@@ -1980,9 +2023,10 @@ static JSValue tjs_httpserver_send_headers(JSContext *ctx, JSValue this_val, int
         return JS_EXCEPTION;
     }
 
+    /* False tells the caller the request is gone, so it can drop the body. */
     TJSHttpRequest *req = tjs_http_find_request(s, req_id);
-    if (!req || req->responded) {
-        return JS_UNDEFINED;
+    if (!req || req->responded || s->closed) {
+        return JS_FALSE;
     }
 
     req->responded = true;
@@ -2081,7 +2125,7 @@ static JSValue tjs_httpserver_send_headers(JSContext *ctx, JSValue this_val, int
     }
 
     js_free(ctx, header_buf);
-    return JS_UNDEFINED;
+    return JS_TRUE;
 }
 
 /*
@@ -2102,9 +2146,11 @@ static JSValue tjs_httpserver_send_body(JSContext *ctx, JSValue this_val, int ar
         return JS_EXCEPTION;
     }
 
+    /* false tells the caller the request is gone (its connection or the server
+     * closed), so it can stop producing the body. */
     TJSHttpRequest *req = tjs_http_find_request(s, req_id);
-    if (!req) {
-        return JS_UNDEFINED; /* Connection already closed, silently ignore. */
+    if (!req || s->closed) {
+        return JS_FALSE;
     }
 
     bool is_final = JS_ToBool(ctx, argv[2]);
@@ -2193,7 +2239,7 @@ static JSValue tjs_httpserver_send_body(JSContext *ctx, JSValue this_val, int ar
     list_add_tail(&pw->link, &req->pending_writes);
     lws_callback_on_writable(req->wsi);
 
-    return JS_UNDEFINED;
+    return JS_TRUE;
 }
 
 /*

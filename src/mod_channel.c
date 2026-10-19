@@ -400,9 +400,7 @@ static void port_dispatch_one(JSContext *ctx, TJSPort *p, TJSChannelMsg *m) {
     JS_FreeValue(ctx, ports);
 }
 
-static void port_async_cb(uv_async_t *handle) {
-    TJSPort *p = handle->data;
-    CHECK_NOT_NULL(p);
+static void port_drain(TJSPort *p) {
     JSContext *ctx = p->ctx;
 
     /* This runs on the owner's loop thread, the only thread that mutates p->state
@@ -432,6 +430,12 @@ static void port_async_cb(uv_async_t *handle) {
         port_dispatch_one(ctx, p, m);
         channel_msg_free(m);
     }
+}
+
+static void port_async_cb(uv_async_t *handle) {
+    TJSPort *p = handle->data;
+    CHECK_NOT_NULL(p);
+    port_drain(p);
 }
 
 static void port_async_close_cb(uv_handle_t *handle) {
@@ -569,6 +573,10 @@ static JSValue tjs_port_postmessage(JSContext *ctx, JSValue this_val, int argc, 
     if (JS_IsArray(port_handles)) {
         JS_GetLength(ctx, port_handles, &nports);
     }
+    int64_t nbufs = 0;
+    if (JS_IsArray(buffers)) {
+        JS_GetLength(ctx, buffers, &nbufs);
+    }
 
     /* Serialize first so a clone failure transfers nothing. */
     TJSChannelMsg *m = channel_msg_build(ctx, value);
@@ -584,26 +592,62 @@ static JSValue tjs_port_postmessage(JSContext *ctx, JSValue this_val, int argc, 
             channel_msg_free(m);
             return JS_ThrowOutOfMemory(ctx);
         }
+    }
+
+    /* Snapshot both lists up front: reading an array element can run JS (an
+     * accessor), and between the immutability check below and the detach no
+     * JS may run, or it could pin a buffer we are about to free. */
+    int64_t nvals = nports + nbufs;
+    JSValue *vals = NULL;
+    if (nvals > 0) {
+        vals = tjs__malloc(sizeof(JSValue) * nvals);
+        if (!vals) {
+            channel_msg_free(m);
+            return JS_ThrowOutOfMemory(ctx);
+        }
         for (int64_t i = 0; i < nports; i++) {
-            JSValue h = JS_GetPropertyUint32(ctx, port_handles, (uint32_t) i);
-            TJSPort *tp = tjs_port_get(ctx, h);
-            JS_FreeValue(ctx, h);
+            vals[i] = JS_GetPropertyUint32(ctx, port_handles, (uint32_t) i);
+        }
+        for (int64_t i = 0; i < nbufs; i++) {
+            vals[nports + i] = JS_GetPropertyUint32(ctx, buffers, (uint32_t) i);
+        }
+    }
+    JSValue *bufs = vals ? vals + nports : NULL;
+
+    /* Serialization can run user code (getters) that starts a native write,
+     * which pins its buffer by marking it immutable. JS_DetachArrayBuffer
+     * ignores that flag and would free memory the write still reads, so refuse
+     * the whole transfer before anything moves. */
+    bool pinned = false;
+    for (int64_t i = 0; i < nbufs; i++) {
+        if (JS_IsImmutableArrayBuffer(bufs[i]) == 1) {
+            pinned = true;
+            break;
+        }
+    }
+
+    if (!pinned) {
+        for (int64_t i = 0; i < nports; i++) {
+            TJSPort *tp = tjs_port_get(ctx, vals[i]);
             if (tp && port_is_live(tp)) {
                 port_do_transfer(tp, &m->ports[m->nports++]);
             }
         }
+        for (int64_t i = 0; i < nbufs; i++) {
+            if (JS_IsArrayBuffer(bufs[i])) {
+                JS_DetachArrayBuffer(ctx, bufs[i]);
+            }
+        }
     }
 
-    if (JS_IsArray(buffers)) {
-        int64_t nbufs = 0;
-        JS_GetLength(ctx, buffers, &nbufs);
-        for (int64_t i = 0; i < nbufs; i++) {
-            JSValue b = JS_GetPropertyUint32(ctx, buffers, (uint32_t) i);
-            if (JS_IsArrayBuffer(b)) {
-                JS_DetachArrayBuffer(ctx, b);
-            }
-            JS_FreeValue(ctx, b);
-        }
+    for (int64_t i = 0; i < nvals; i++) {
+        JS_FreeValue(ctx, vals[i]);
+    }
+    tjs__free(vals);
+
+    if (pinned) {
+        channel_msg_free(m);
+        return JS_ThrowTypeError(ctx, "Cannot transfer an immutable ArrayBuffer");
     }
 
     port_post(p, m);
@@ -734,6 +778,24 @@ void tjs__channel_port_close(JSRuntime *rt, JSValue port_handle) {
     TJSPort *p = JS_GetOpaque(port_handle, tjs__class_id_rt(rt, TJS_CLASS_PORT));
     if (p) {
         port_do_close(p);
+    }
+}
+
+/* Deliver everything already in a started worker-channel port's inbox now,
+ * without waiting for its async wake. No-op unless the port is started. */
+void tjs__channel_port_flush(JSRuntime *rt, JSValue port_handle) {
+    TJSPort *p = JS_GetOpaque(port_handle, tjs__class_id_rt(rt, TJS_CLASS_PORT));
+    if (p && p->state == PORT_STARTED) {
+        port_drain(p);
+    }
+}
+
+/* Stop a worker-channel port from keeping its loop alive, leaving it started:
+ * later posts to the (closed) peer are dropped rather than throwing. */
+void tjs__channel_port_unref(JSRuntime *rt, JSValue port_handle) {
+    TJSPort *p = JS_GetOpaque(port_handle, tjs__class_id_rt(rt, TJS_CLASS_PORT));
+    if (p) {
+        uv_unref((uv_handle_t *) &p->async);
     }
 }
 
