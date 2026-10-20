@@ -561,6 +561,26 @@ set(LWS_MBEDTLS_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/deps/mbedtls/include" 
 #     info->log_cx (e.g. lws's internal "system" vhost) bound to the global
 #     log context instead of its context's, so per-runtime log contexts still
 #     raced on the global one's unlocked refcount across Worker threads.
+#   - lws-win32-connect-check-reschedule.patch: on Windows the async
+#     connect check ran once and was never rescheduled when the only
+#     address was still connecting, so client connects to a single-address
+#     host hung until the connect timeout; upstream 03da4abc3 on main, not
+#     yet in v5.0-stable.
+#   - lws-h2-migrate-no-follow-redirect.patch: the first request on a new h2
+#     connection lost LCCSCF_HTTP_NO_FOLLOW_REDIRECT when migrated onto
+#     stream 1, so fetch's redirect: 'manual' followed redirects over h2;
+#     from upstream e56ef83b5 on main, not yet in v5.0-stable.
+#   - lws-h2-client-empty-settings.patch: an empty SETTINGS frame from the
+#     server (Node's default) never completed, so the client's first request
+#     was never moved onto stream 1 or sent; not yet upstream.
+#   - lws-h2-client-end-stream-half-closed.patch: a request sent with
+#     END_STREAM stayed OPEN until a later POLLOUT pass, so a fast response
+#     left the stream HALF_CLOSED_LOCAL instead of CLOSED and the request
+#     hung; the "closed stays closed" half is from upstream 4f8d4fdee.
+#   - lws-h2-client-sid1-gate.patch: the "sid 1 sends headers first" rule
+#     tested the parser's current stream, which after a server PING is the
+#     connection itself, so later pooled requests stalled; from upstream
+#     a18023d26 on main, not yet in v5.0-stable.
 tjs_apply_patches("${CMAKE_CURRENT_SOURCE_DIR}/deps/libwebsockets" "lws-")
 
 tjs_slim_lws_options()
