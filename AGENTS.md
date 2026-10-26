@@ -13,10 +13,12 @@ make                # Build (Release). Output: build/tjs
 make debug          # Build (Debug)
 make js             # Rebuild JS bundles only (after editing src/js/)
 make test           # Run all tests
-make test-advanced  # Run advanced/integration tests (requires npm install in tests/advanced/)
+make test-advanced  # Run advanced/integration tests (runs pnpm install in tests/advanced/)
 make format         # Run clang-format on C sources
 make lint           # Run ESLint on JS sources
 ```
+
+JS dependencies are managed with pnpm (version pinned in `packageManager` in `package.json`). Run `pnpm install` at the repo root before `make js`, `make lint` or building the docs. It installs the root and `website/` packages from the single `pnpm-lock.yaml`. `tests/advanced/` is a standalone, unlocked project.
 
 After modifying files in `src/js/`, run `make js && make` to rebuild.
 
@@ -608,10 +610,10 @@ Relatedly, the fork config *deletes* the `algolia` key rather than setting it to
 theme out — but a hollow key still satisfies `'algolia' in themeConfig`, which is how
 Docusaurus tests several other fields.
 
-### Preview with `mise run docs:dev`, never `npm start`
+### Preview with `mise run docs:dev`, never `pnpm start`
 
 Everything fork-only is reachable **only through the fork config**, by design. The trap that
-follows is that `npm start` and `npm run docs` in `website/` use *upstream's* config and fail
+follows is that `pnpm start` and `pnpm run docs` in `website/` use *upstream's* config and fail
 silently-but-visibly: no sidebar badges, no fork sidebar category at all, upstream's navbar
 and Algolia box, and the site served at `/` instead of the Pages path. Nothing errors — it is
 simply not the site that gets published. This has already been mistaken for a browser bug.

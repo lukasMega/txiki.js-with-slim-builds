@@ -390,7 +390,7 @@ function esbuildBinary() {
     const bin = path.join(ROOT, 'node_modules', 'esbuild', 'bin', 'esbuild');
 
     if (!fs.existsSync(bin)) {
-        fail('node_modules/esbuild not found -- run `npm install` first (npx would hit the network)');
+        fail('node_modules/esbuild not found -- run `pnpm install` first (npx would hit the network)');
     }
 
     return bin;
@@ -500,7 +500,7 @@ export function buildStudy(opts) {
 
     fs.mkdirSync(binDir, { recursive: true });
 
-    // Outside the repo on purpose: `npm run lint` has its own ignore list and
+    // Outside the repo on purpose: `pnpm run lint` has its own ignore list and
     // would otherwise flag the probe's `tjs` global in the scratch directory.
     const probeFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'tjs-feature-probe-')), 'probe.js');
 

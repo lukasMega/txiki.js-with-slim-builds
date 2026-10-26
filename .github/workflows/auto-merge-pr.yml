@@ -121,9 +121,14 @@ jobs:
         with:
           experimental: true
 
-      - name: Install npm dependencies
+      - name: Install pnpm
         if: steps.gate.outputs.proceed == 'true'
-        run: npm install --ignore-scripts
+        run: npm install -g "$(node -p 'require("./package.json").packageManager')"
+      # Root project only: website/ is a pnpm workspace member, and this job
+      # needs esbuild, not Docusaurus.
+      - name: Install root dependencies
+        if: steps.gate.outputs.proceed == 'true'
+        run: pnpm install --frozen-lockfile --filter txiki.js
 
       # Left uncommitted so `make js` output lands *in* the merge commit: it
       # reads src/js/**, so it must run after the last merged edit there, and

@@ -42,18 +42,19 @@ jobs:
     - uses: actions/setup-node@v7
       with:
         node-version-file: '.nvmrc'
-    # Not `--ignore-scripts`: the root `postinstall` is `npm install --prefix website`,
-    # so that flag would skip every Docusaurus dependency and fail later with a confusing
-    # missing-module error. (auto-merge-pr.yml does use it -- do not copy that line here.)
+    - name: Install pnpm
+      run: npm install -g "$(node -p 'require("./package.json").packageManager')"
+    # The whole workspace, not `--filter txiki.js` like the build jobs: website/ is a
+    # workspace member, and filtering it out fails later with a missing-module error.
     - name: Install dependencies
-      run: npm install
+      run: pnpm install --frozen-lockfile
     - name: Check slim metrics
       run: node website/scripts/generate-slim-metrics.mjs --check
     # Must run before the build. `sidebars.ts` requires ./docs/api/typedoc-sidebar.cjs
     # inside a try/catch, so a missing TypeDoc step yields a *successful* build with the
     # Standard Library section silently empty.
     - name: Generate the API reference
-      run: npm run generate-api --prefix website
+      run: pnpm --dir website run generate-api
     # The local bin, not `npx`: if the dependency is somehow missing, npx would go and
     # fetch a package called `docusaurus` from the registry instead of failing.
     - name: Build the site

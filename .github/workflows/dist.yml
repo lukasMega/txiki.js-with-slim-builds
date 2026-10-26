@@ -183,10 +183,14 @@ jobs:
           VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
         run: vcpkg install libffi:x64-windows-static
 
+      - name: Install pnpm
+        shell: bash
+        run: npm install -g "$(node -p 'require("./package.json").packageManager')"
       # esbuild comes from node_modules, not `npx` (network per run, and
-      # version-unstable bundles).
-      - name: Install npm dependencies
-        run: npm install --ignore-scripts
+      # version-unstable bundles). Root project only: website/ is a pnpm
+      # workspace member, and this job needs esbuild, not Docusaurus.
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile --filter txiki.js
 
       # --host-tjs also builds the full-CLI driver and the test fixtures into
       # build-host; the artifact cannot run the suite itself.

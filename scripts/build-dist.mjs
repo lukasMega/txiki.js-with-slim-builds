@@ -14,7 +14,7 @@
 //   node scripts/build-dist.mjs --bundles-only  # regenerate src/bundles only
 //   node scripts/build-dist.mjs --ref v26.6.0   # clone the fork at a ref first
 //
-// Requires: Node >= 20, git, cmake, a C/C++ toolchain, and `npm install` run
+// Requires: Node >= 20, git, cmake, a C/C++ toolchain, and `pnpm install` run
 // (esbuild is resolved from node_modules, never from the network).
 
 import { spawnSync } from 'node:child_process';
@@ -429,7 +429,7 @@ if (!fs.existsSync(esbuildBin)) {
 }
 
 if (!esbuildBin || !fs.existsSync(esbuildBin)) {
-    fail(`esbuild not found under ${root}/node_modules -- run \`npm install\` first`);
+    fail(`esbuild not found under ${root}/node_modules -- run \`pnpm install\` first`);
 }
 
 // Depending on the platform, node_modules/esbuild/bin/esbuild is either the

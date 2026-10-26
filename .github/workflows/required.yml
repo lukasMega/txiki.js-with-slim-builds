@@ -44,14 +44,16 @@ jobs:
         with:
           check-latest: true
           node-version-file: '.nvmrc'
+      - name: Install pnpm
+        run: npm install -g "$(node -p 'require("./package.json").packageManager')"
       - name: Install dependencies
         run: |
-          npm install
+          pnpm install --frozen-lockfile
           sudo apt update
           sudo apt install -y clang-format
           clang-format --version
       - name: Run the linter
-        run: npm run lint
+        run: pnpm run lint
       - name: Run the formatter
         run: clang-format -i src/*.{c,h}
       - name: Check if the tree is dirty
@@ -69,8 +71,11 @@ jobs:
         with:
           check-latest: true
           node-version-file: '.nvmrc'
+      - name: Install pnpm
+        run: npm install -g "$(node -p 'require("./package.json").packageManager')"
       - name: Install dependencies
-        run: npm install
+        run: |
+          pnpm install --frozen-lockfile
       # src/bundles/c is tracked in this fork, so a bundle that disagrees with
       # its source in src/js is a real defect, not a build artifact difference.
       - name: Build it
