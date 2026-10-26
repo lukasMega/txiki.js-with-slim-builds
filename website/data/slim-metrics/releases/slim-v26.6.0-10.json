@@ -1,0 +1,520 @@
+{
+  "schemaVersion": 1,
+  "tag": "slim-v26.6.0-10",
+  "commit": "d684c95b297f64230cc7390e0e839fc4180d5411",
+  "artifacts": [
+    {
+      "platform": "linux-x86_64",
+      "profile": "balanced-min",
+      "optimization": "balanced",
+      "asset": "txiki-slim-balanced-min-linux-x86_64.zip",
+      "archiveBytes": 1048384,
+      "binaryBytes": 1964056,
+      "binarySha256": "1dedba2e0c9d496c4af1636a1a4af704887d9d74f3adbbd5f89d52e2bcff8a28",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-x86_64",
+      "profile": "tuned-min",
+      "optimization": "tuned",
+      "asset": "txiki-slim-tuned-min-linux-x86_64.zip",
+      "archiveBytes": 1048357,
+      "binaryBytes": 1964056,
+      "binarySha256": "1dedba2e0c9d496c4af1636a1a4af704887d9d74f3adbbd5f89d52e2bcff8a28",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-x86_64",
+      "profile": "min",
+      "optimization": "smallest",
+      "asset": "txiki-slim-min-linux-x86_64.zip",
+      "archiveBytes": 1048313,
+      "binaryBytes": 1964056,
+      "binarySha256": "1dedba2e0c9d496c4af1636a1a4af704887d9d74f3adbbd5f89d52e2bcff8a28",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-x86_64",
+      "profile": "ffi",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-linux-x86_64.zip",
+      "archiveBytes": 1081898,
+      "binaryBytes": 2009560,
+      "binarySha256": "24aeab901880b2deb1d58dfa70c8cf9336fb9ca6c8299cff803645642e0c60f0",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-x86_64",
+      "profile": "tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-tls-linux-x86_64.zip",
+      "archiveBytes": 1332459,
+      "binaryBytes": 2423120,
+      "binarySha256": "66d66e14d18aaf9b43b23365931b4afbebb34379243f6550f7bf6c384ee1127a",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-x86_64",
+      "profile": "sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-sqlite-linux-x86_64.zip",
+      "archiveBytes": 1506131,
+      "binaryBytes": 2766072,
+      "binarySha256": "96350fc72788268955abbcbabcfdf2b1b721de7db491bd064ccc942bedd68d5b",
+      "features": {
+        "ffi": false,
+        "sqlite": true,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-x86_64",
+      "profile": "ffi-tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-linux-x86_64.zip",
+      "archiveBytes": 1366530,
+      "binaryBytes": 2468656,
+      "binarySha256": "4b0f43da8418b887d815cf89d369b37fe089f2baadc7bb25b2f58bb4506a4409",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-x86_64",
+      "profile": "ffi-tls-sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-sqlite-linux-x86_64.zip",
+      "archiveBytes": 1824610,
+      "binaryBytes": 3274768,
+      "binarySha256": "e69986361480d50f15427669a9a1fc46bbc53f0b5690df41d6d9fbc8e0a707a8",
+      "features": {
+        "ffi": true,
+        "sqlite": true,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "balanced-min",
+      "optimization": "balanced",
+      "asset": "txiki-slim-balanced-min-linux-arm64.zip",
+      "archiveBytes": 1111018,
+      "binaryBytes": 2184320,
+      "binarySha256": "1958e5e2add567b857606976385e3c422e75bfd9136c40159d7faf02abd4e030",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "tuned-min",
+      "optimization": "tuned",
+      "asset": "txiki-slim-tuned-min-linux-arm64.zip",
+      "archiveBytes": 1110992,
+      "binaryBytes": 2184320,
+      "binarySha256": "1958e5e2add567b857606976385e3c422e75bfd9136c40159d7faf02abd4e030",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "min",
+      "optimization": "smallest",
+      "asset": "txiki-slim-min-linux-arm64.zip",
+      "archiveBytes": 1110946,
+      "binaryBytes": 2184320,
+      "binarySha256": "1958e5e2add567b857606976385e3c422e75bfd9136c40159d7faf02abd4e030",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "ffi",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-linux-arm64.zip",
+      "archiveBytes": 1142093,
+      "binaryBytes": 2250160,
+      "binarySha256": "bbc3c45e8e8a3877e9f69aad94eebb382ccb6f8c30a7845857f3050b7bc8ecd4",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-tls-linux-arm64.zip",
+      "archiveBytes": 1404107,
+      "binaryBytes": 2708904,
+      "binarySha256": "a961b5fc62c36ab1759d647bc382e0311e0a45039132d62c66cce24138497532",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-sqlite-linux-arm64.zip",
+      "archiveBytes": 1627082,
+      "binaryBytes": 3183096,
+      "binarySha256": "24929719585fb9ba48118f0f954d5c8824c81008f8bf41d962bb1724cad60c89",
+      "features": {
+        "ffi": false,
+        "sqlite": true,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "ffi-tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-linux-arm64.zip",
+      "archiveBytes": 1438401,
+      "binaryBytes": 2709208,
+      "binarySha256": "3ada2972b2ee2fff667d0360e73ce638634794d019ee4fcbec5c4a872d8c94a6",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "linux-arm64",
+      "profile": "ffi-tls-sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-sqlite-linux-arm64.zip",
+      "archiveBytes": 1957700,
+      "binaryBytes": 3773520,
+      "binarySha256": "e9eb6c6623b51f7f2c923695e2923768dc84608108126aa44ce7de6451cc1f09",
+      "features": {
+        "ffi": true,
+        "sqlite": true,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "balanced-min",
+      "optimization": "balanced",
+      "asset": "txiki-slim-balanced-min-macos-arm64.zip",
+      "archiveBytes": 1099017,
+      "binaryBytes": 2140608,
+      "binarySha256": "6858c3d58c7fef498e02ad2791dae9671fcdd32dc9749844f132620dc4ba9c8e",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "tuned-min",
+      "optimization": "tuned",
+      "asset": "txiki-slim-tuned-min-macos-arm64.zip",
+      "archiveBytes": 1054498,
+      "binaryBytes": 2074288,
+      "binarySha256": "e21606e0d8a43b895d4c5a76bda072ba8b39399a8f3d6ac8482918c9d1abc1b9",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "min",
+      "optimization": "smallest",
+      "asset": "txiki-slim-min-macos-arm64.zip",
+      "archiveBytes": 1073091,
+      "binaryBytes": 2025536,
+      "binarySha256": "9e7a5d55468776b9b221168ad773ef742020ea3bbb54b9eeded6d8f02f19d98e",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "ffi",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-macos-arm64.zip",
+      "archiveBytes": 1105133,
+      "binaryBytes": 2059840,
+      "binarySha256": "afce1c90f3b8d7f940dd28876d617b28ddc1bc85b06aaf5e9857e9372e6e363d",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-tls-macos-arm64.zip",
+      "archiveBytes": 1368791,
+      "binaryBytes": 2522608,
+      "binarySha256": "ced093cf541e5dab55d5e001ae5b7964c60f329e68cce1e2d1ddbe7d85d47d97",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-sqlite-macos-arm64.zip",
+      "archiveBytes": 1579634,
+      "binaryBytes": 2955648,
+      "binarySha256": "732fb52a2317df28d521baae79a7b2517d36c22d90b73bf2be10fdaaabe20cd4",
+      "features": {
+        "ffi": false,
+        "sqlite": true,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "ffi-tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-macos-arm64.zip",
+      "archiveBytes": 1400639,
+      "binaryBytes": 2556928,
+      "binarySha256": "32701b78d798bedee842896d8275c327d5a628e609a6e77b36cb799834aa30b9",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "macos-arm64",
+      "profile": "ffi-tls-sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-sqlite-macos-arm64.zip",
+      "archiveBytes": 1905603,
+      "binaryBytes": 3503568,
+      "binarySha256": "9e31932b8d3ee6f9a3c8c862ef2886929ebb5f980d37bd6384dad82203aa83c6",
+      "features": {
+        "ffi": true,
+        "sqlite": true,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "balanced-min",
+      "optimization": "balanced",
+      "asset": "txiki-slim-balanced-min-windows-x86_64.zip",
+      "archiveBytes": 1314601,
+      "binaryBytes": 2437632,
+      "binarySha256": "3088bb9fb227042e903dd8e4b0574efea2f2bd01b94c292bdcfe47db6adbfe9e",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "tuned-min",
+      "optimization": "tuned",
+      "asset": "txiki-slim-tuned-min-windows-x86_64.zip",
+      "archiveBytes": 1314578,
+      "binaryBytes": 2437632,
+      "binarySha256": "20c7b74434bb1348eada88a0a296273e18996afdeaa31f8b819a3c45f28bd01c",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "min",
+      "optimization": "smallest",
+      "asset": "txiki-slim-min-windows-x86_64.zip",
+      "archiveBytes": 1314527,
+      "binaryBytes": 2437632,
+      "binarySha256": "193aabab9ee594b3ea99f69597347ed285ad45cc9eaef356d375606ed56bf4ce",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "ffi",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-windows-x86_64.zip",
+      "archiveBytes": 1358188,
+      "binaryBytes": 2503168,
+      "binarySha256": "4477b701520adbdb111483884bcc3f5e6c0b2c56ee33cd31e44945bf5c1e7d7d",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-tls-windows-x86_64.zip",
+      "archiveBytes": 1624182,
+      "binaryBytes": 2946048,
+      "binarySha256": "8796eef5258791753a7fed0211f301d6e6f430ad571794e6259ac51fe397ac4e",
+      "features": {
+        "ffi": false,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-sqlite-windows-x86_64.zip",
+      "archiveBytes": 1799956,
+      "binaryBytes": 3264000,
+      "binarySha256": "1224683e41d8e2158792f416cf7b05dad3c16036e48f5f4df83d3381cafef0a8",
+      "features": {
+        "ffi": false,
+        "sqlite": true,
+        "tls": false,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "ffi-tls",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-windows-x86_64.zip",
+      "archiveBytes": 1668770,
+      "binaryBytes": 3010560,
+      "binarySha256": "c690497adaece735ed9d7c8519b0e758fa7cc3d75cd2744cb4f6eedafd65f067",
+      "features": {
+        "ffi": true,
+        "sqlite": false,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    },
+    {
+      "platform": "windows-x86_64",
+      "profile": "ffi-tls-sqlite",
+      "optimization": "smallest",
+      "asset": "txiki-slim-ffi-tls-sqlite-windows-x86_64.zip",
+      "archiveBytes": 2153502,
+      "binaryBytes": 3835904,
+      "binarySha256": "38b05ed1c653492ec6ae3b8c714743643c4ad4229335cd110e161e9c362e09ae",
+      "features": {
+        "ffi": true,
+        "sqlite": true,
+        "tls": true,
+        "wasm": false,
+        "webcrypto": true
+      }
+    }
+  ],
+  "publishedAt": "2026-10-26T22:49:08.000Z"
+}

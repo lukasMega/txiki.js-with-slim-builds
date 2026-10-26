@@ -11,7 +11,7 @@ import ForkNotice from '@site/src/components/ForkNotice';
 
 Each slim release ships **eight profiles on four platforms**, from
 [Releases](https://github.com/lukasMega/txiki.js-with-slim-builds/releases), under tags such as
-`slim-v26.6.0-8`.
+`slim-v26.6.0-10`.
 
 ## Pick a profile first
 
@@ -37,7 +37,7 @@ Every profile keeps Web Crypto, REPL and `tjs compile`. Every profile removes We
 ## Install
 
 ```bash
-VERSION=slim-v26.6.0-8
+VERSION=slim-v26.6.0-10
 ASSET=txiki-slim-min-linux-x86_64.zip
 
 curl -fsSLO "https://github.com/lukasMega/txiki.js-with-slim-builds/releases/download/$VERSION/$ASSET"
@@ -61,7 +61,7 @@ echo 'console.log(tjs.engine.features, tjs.engine.cli)' | ./tjs
 <summary>Windows installation and checksum verification</summary>
 
 ```powershell
-$Version = 'slim-v26.6.0-8'
+$Version = 'slim-v26.6.0-10'
 $Asset   = 'txiki-slim-min-windows-x86_64.zip'
 
 Invoke-WebRequest -Uri "https://github.com/lukasMega/txiki.js-with-slim-builds/releases/download/$Version/$Asset" -OutFile $Asset
@@ -92,21 +92,20 @@ On MSVC nine of the eleven size and hardening levers are compiled out, so Window
 roughly 10–27% larger than their Unix counterparts and are shipped as a deliberately
 non-hardened profile. Linux GCC has no `-Oz` either, so `min`, `tuned-min` and the current
 `balanced-min` recipes collapse onto the same binary on both Linux and Windows — macOS arm64 is
-the only platform where the codegen choice changes anything. `slim-v26.6.0-8` was built with
-the previous `balanced` recipe, so its `balanced-min` row does not represent the next release.
+the only platform where the codegen choice changes anything.
 
-Compressed archive sizes from `slim-v26.6.0-8` (2026-08-24):
+Compressed archive sizes from `slim-v26.6.0-10` (2026-10-26):
 
 | profile | linux-x86_64 | linux-arm64 | macos-arm64 | windows-x86_64 |
 | --- | ---: | ---: | ---: | ---: |
-| `min` | 1.03 MB | 1.10 MB | 1.07 MB | 1.31 MB |
-| `tuned-min` | 1.03 MB | 1.10 MB | 1.05 MB | 1.31 MB |
-| `balanced-min` | 1.03 MB | 1.12 MB | 1.11 MB | 1.32 MB |
-| `ffi` | 1.06 MB | 1.13 MB | 1.10 MB | 1.35 MB |
-| `tls` | 1.31 MB | 1.40 MB | 1.36 MB | 1.62 MB |
-| `sqlite` | 1.49 MB | 1.62 MB | 1.57 MB | 1.79 MB |
-| `ffi-tls` | 1.34 MB | 1.43 MB | 1.39 MB | 1.66 MB |
-| `ffi-tls-sqlite` | 1.80 MB | 1.95 MB | 1.90 MB | 2.14 MB |
+| `min` | 1.05 MB | 1.11 MB | 1.07 MB | 1.31 MB |
+| `tuned-min` | 1.05 MB | 1.11 MB | 1.05 MB | 1.31 MB |
+| `balanced-min` | 1.05 MB | 1.11 MB | 1.10 MB | 1.31 MB |
+| `ffi` | 1.08 MB | 1.14 MB | 1.11 MB | 1.36 MB |
+| `tls` | 1.33 MB | 1.40 MB | 1.37 MB | 1.62 MB |
+| `sqlite` | 1.51 MB | 1.63 MB | 1.58 MB | 1.80 MB |
+| `ffi-tls` | 1.37 MB | 1.44 MB | 1.40 MB | 1.67 MB |
+| `ffi-tls-sqlite` | 1.82 MB | 1.96 MB | 1.91 MB | 2.15 MB |
 
 These are ZIP sizes; the unpacked executable is roughly twice as large. Build from source when
 none of the eight fits — for example TLS without the embedded CA bundle, or WebAssembly.

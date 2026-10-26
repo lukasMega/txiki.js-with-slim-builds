@@ -40,16 +40,16 @@ fork has. Use the selector to compare it against deltas derived from released pr
 fewer features but exist for all four platforms.
 
 Sizes in the table below are from `BUILDINFO.txt` inside each published artifact of
-**`slim-v26.6.0-8`** (commit `1274e5e7`, 2026-08-24), **linux-x86_64**, unpacked and stripped.
+**`slim-v26.6.0-10`** (commit `d684c95b`, 2026-10-26), **linux-x86_64**, unpacked and stripped.
 
 | profile | binary | vs `min` |
 | --- | ---: | ---: |
-| `min` | 1,914,824 B | — |
-| `ffi` | 1,964,424 B | +48 KB |
-| `tls` | 2,365,536 B | +440 KB |
-| `sqlite` | 2,717,208 B | +784 KB |
-| `ffi-tls` | 2,406,944 B | +481 KB |
-| `ffi-tls-sqlite` | 3,209,344 B | +1,264 KB |
+| `min` | 1,964,056 B | — |
+| `ffi` | 2,009,560 B | +44 KB |
+| `tls` | 2,423,120 B | +448 KB |
+| `sqlite` | 2,766,072 B | +783 KB |
+| `ffi-tls` | 2,468,656 B | +493 KB |
+| `ffi-tls-sqlite` | 3,274,768 B | +1,280 KB |
 
 A **default upstream build is 8,900,848 B**, so `min` is `0.22×` of it. Most of that gap is
 WebAssembly: WAMR is compiled out of every published profile.
@@ -72,14 +72,14 @@ hold, which is why this page uses delta bars.
 TLS is mbedTLS plus the embedded Mozilla CA bundle; SQLite is the amalgamation. Neither
 compresses much further — if you need them, you need the bytes.
 
-The upstream figure comes from the benchmark run at `slim-v26.6.0-8-4-g709c52a`, four commits
-later, where `min` measures the same 1,914,824 B. The toolchain is whatever `ubuntu-latest`
+The upstream figure comes from the benchmark run at `slim-v26.6.0-8-4-g709c52a`, where `min`
+measured 1,914,824 B; it has not been re-measured since, so the ratio is approximate. The toolchain is whatever `ubuntu-latest`
 shipped that day; `BUILDINFO.txt` does not record a compiler version, so treat the exact GCC
 release as unpinned.
 
 The release chart reads committed records generated from published ZIP files. It never
 rebuilds an old tag or fetches GitHub during the site build. The matrix has grown over time and
-the chart shows that honestly: `slim-v26.6.0-6` shipped four profiles, `-7` six, `-8` eight. A
+the chart shows that honestly: `slim-v26.6.0-6` shipped four profiles, `-7` six, `-8` onwards eight. A
 profile that did not exist yet is a gap, never zero bytes.
 
 </details>
@@ -103,8 +103,8 @@ study, minimum user-CPU time of 7 runs, 2026-08-24 for
 
 Prefer `balanced`. **macOS arm64 is the only platform where the three modes genuinely differ** —
 `-Oz` is a Clang feature, so on Linux (GCC) and Windows (MSVC) the build is already at `-Os`
-and all three `min` variants are the same binary. Verified for `tuned-min` against
-`slim-v26.6.0-8`'s `SHA256SUMS.txt`: same SHA-256 as `min` on both Linux architectures.
+and all three `min` variants are the same binary. Verified against `slim-v26.6.0-10`: `tuned-min`
+and `balanced-min` have the same SHA-256 as `min` on both Linux architectures.
 
 <details>
 <summary>Why `balanced` wins, and why stacking it with `tuned` does not</summary>
@@ -128,13 +128,12 @@ not set that attribute, so raising the engine already puts it out of reach. Enab
 **+32,688 B for no change in run time**, which is why `--optimization balanced` explicitly sets
 `BUILD_WITH_NO_OUTLINE=OFF`.
 
-:::warning[Numbers ahead of the artifacts]
+:::note[Older `balanced-min` artifacts]
 
-The `balanced` row above is the *current* recipe. `slim-v26.6.0-8` was cut before it landed and
-still ships the previous one (whole binary at `-Os`, **LTO off**) — on linux-x86_64 that is
-1,947,800 B against `min`'s 1,914,824 B, a gap that is entirely the missing LTO and says
-nothing about engine optimisation. The next release carries the newer build: smaller at the
-same speed on macOS, and identical to `min` on Linux and Windows.
+`slim-v26.6.0-8` was cut before the current `balanced` recipe landed and ships the previous one
+(whole binary at `-Os`, **LTO off**) — on linux-x86_64 that is 1,947,800 B against `min`'s
+1,914,824 B, a gap that is entirely the missing LTO. From `slim-v26.6.0-9` on, `balanced-min`
+is the current recipe.
 
 :::
 
