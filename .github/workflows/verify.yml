@@ -62,8 +62,12 @@ jobs:
           sudo apt update
           sudo apt install -y libffi-dev
 
-      - name: Install npm dependencies
-        run: npm install --ignore-scripts
+      - name: Install pnpm
+        run: npm install -g "$(node -p 'require("./package.json").packageManager')"
+      # Root project only: website/ is a pnpm workspace member, and this job
+      # needs esbuild, not Docusaurus.
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile --filter txiki.js
 
       # --host-tjs adds the full-CLI driver and the test fixtures to build-host,
       # the tree build-dist.mjs already configures for tjsc.

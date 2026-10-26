@@ -80,8 +80,12 @@ jobs:
       # No CC override: the Linux dist jobs build with the runner's default GCC
       # (clang was tried in #27 and reverted in #29 for being 3% larger), and a
       # benchmark of a binary nobody ships is worse than no benchmark.
-      - name: Install npm dependencies
-        run: npm install --ignore-scripts
+      - name: Install pnpm
+        run: npm install -g "$(node -p 'require("./package.json").packageManager')"
+      # Root project only: website/ is a pnpm workspace member, and this job
+      # needs esbuild, not Docusaurus.
+      - name: Install root dependencies
+        run: pnpm install --frozen-lockfile --filter txiki.js
 
       # The full default build is the reference every ratio is taken against.
       - name: Build full

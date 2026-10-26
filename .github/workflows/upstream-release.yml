@@ -199,12 +199,15 @@ jobs:
         with:
           experimental: true
 
-      - name: Fetch submodules and npm dependencies
+      - name: Fetch submodules and root dependencies
         if: steps.dryrun.outputs.clean == 'true' && steps.open_pr.outputs.number == ''
         run: |
           set -euo pipefail
           git submodule update --init --recursive
-          npm install --ignore-scripts
+          npm install -g "$(node -p 'require("./package.json").packageManager')"
+          # Root project only: website/ is a pnpm workspace member, and this job
+          # needs esbuild, not Docusaurus.
+          pnpm install --frozen-lockfile --filter txiki.js
 
       # Left uncommitted so `make js` output lands *in* the merge commit: it
       # reads src/js/**, so it must run after the last merged edit there, and
