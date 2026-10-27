@@ -51,7 +51,7 @@ Sizes in the table below are from `BUILDINFO.txt` inside each published artifact
 | `ffi-tls` | 2,468,656 B | +493 KB |
 | `ffi-tls-sqlite` | 3,274,768 B | +1,280 KB |
 
-A **default upstream build is 8,900,848 B**, so `min` is `0.22×` of it. Most of that gap is
+A **default upstream build is 9,144,328 B**, so `min` is `0.21×` of it. Most of that gap is
 WebAssembly: WAMR is compiled out of every published profile.
 
 <details>
@@ -72,10 +72,11 @@ hold, which is why this page uses delta bars.
 TLS is mbedTLS plus the embedded Mozilla CA bundle; SQLite is the amalgamation. Neither
 compresses much further — if you need them, you need the bytes.
 
-The upstream figure comes from the benchmark run at `slim-v26.6.0-8-4-g709c52a`, where `min`
-measured 1,914,824 B; it has not been re-measured since, so the ratio is approximate. The toolchain is whatever `ubuntu-latest`
-shipped that day; `BUILDINFO.txt` does not record a compiler version, so treat the exact GCC
-release as unpinned.
+The upstream figure comes from the benchmark run at `slim-v26.6.0-10` (2026-10-27,
+`ubuntu-24.04`, GCC 13.3). That run rebuilds every binary on the runner, and its `min` measured
+1,931,296 B — 32,760 B less than the published artifact — so the ratio is approximate. The release
+toolchain is whatever `ubuntu-latest` shipped that day; `BUILDINFO.txt` does not record a compiler
+version, so treat the exact GCC release as unpinned.
 
 The release chart reads committed records generated from published ZIP files. It never
 rebuilds an old tag or fetches GitHub during the site build. The matrix has grown over time and
@@ -145,22 +146,24 @@ is the current recipe.
 
 Sizes alone do not say whether a slim build is slower at anything that matters, so the fork
 records benchmark runs: startup, resident memory and throughput workloads, on `linux-x86_64`
-and `macos-arm64`. From the run at `slim-v26.6.0-8-4-g709c52a` (2026-08-24) on `linux-x86_64`,
-as ratios of the full build:
+and `macos-arm64`. From the run at `slim-v26.6.0-10` (2026-10-27), as ratios of the full build
+on the same runner:
 
-| metric | `min` |
-| --- | ---: |
-| binary size, raw | 0.22× |
-| binary size, gzip -9 | 0.25× |
-| baseline RSS | 0.40× |
-| peak RSS, event loop | 0.57× |
-| `JSON.parse` throughput | **0.63×** |
-| SHA-256 throughput | 1.07× |
+| metric | linux-x86_64 `min` | macos-arm64 `min` | macos-arm64 `balanced-min` |
+| --- | ---: | ---: | ---: |
+| binary size, raw | 0.21× | 0.33× | 0.35× |
+| binary size, gzip -9 | 0.25× | 0.38× | 0.39× |
+| baseline RSS | 0.41× | 0.79× | 0.84× |
+| peak RSS, event loop | 0.57× | 0.99× | 1.01× |
+| `JSON.parse` throughput | **0.66×** | **0.48×** | **0.66×** |
+| SHA-256 throughput | 1.02× | 0.84× | 0.89× |
 
 Read the ratios, not the absolute numbers — hosted runners drift with image and hardware. The
 `JSON.parse` row is the honest cost of `-Oz`: engine work, in the code path the outliner
 damages, and the reason `tuned-min` and `balanced-min` are published at all. SHA-256 is native
-code the engine barely touches; treat its `1.07×` as "unaffected", not as a speedup.
+code the engine barely touches; on Linux treat its `1.02×` as "unaffected", not as a speedup.
+On macOS, `balanced-min` recovers most of the `JSON.parse` loss for 6% more binary. On Linux all
+three `min` variants are the same binary, so only one column is shown.
 
 The generated report at
 [`benchmarks/README.md`](https://github.com/lukasMega/txiki.js-with-slim-builds/blob/slim/benchmarks/README.md)
@@ -172,8 +175,8 @@ every figure. Prefer it over this page for anything current.
 
 Runs happen on demand (`workflow_dispatch`) and on PRs touching `benchmarks/**` — not on every
 release — and history entries are committed by hand, because nothing in this fork's automation
-pushes to `slim`. The first recorded run compares the full build against `min`, `ffi`, `tls`
-and `ffi-tls`. An `all` dispatch builds all eight published profiles, including SQLite and both
+pushes to `slim`. The first recorded run (`slim-v26.6.0-8-4-g709c52a`) compares the full build
+against `min`, `ffi`, `tls` and `ffi-tls`; the `slim-v26.6.0-10` run covers all eight. An `all` dispatch builds all eight published profiles, including SQLite and both
 codegen variants; pass `release_tag` so every binary comes from the exact release commit.
 SQLite should not change engine throughput, but measuring that claim beats assuming it.
 

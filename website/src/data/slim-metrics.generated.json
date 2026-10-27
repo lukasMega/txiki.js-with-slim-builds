@@ -2147,6 +2147,158 @@
           },
           "ffi-tls-sqlite": null
         }
+      },
+      {
+        "version": "slim-v26.6.0-10",
+        "commit": "d684c95b297f64230cc7390e0e839fc4180d5411",
+        "date": "2026-10-27T07:22:48.712Z",
+        "platform": "linux-x86_64",
+        "quick": false,
+        "runner": {
+          "image": "ubuntu24",
+          "ci": true,
+          "cpuModel": "AMD EPYC 7763 64-Core Processor",
+          "cores": 4,
+          "memTotal": 16766414848,
+          "release": "6.17.0-1022-azure"
+        },
+        "toolchain": {
+          "cc": "cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+          "cmake": "cmake version 3.31.6",
+          "node": "v24.22.1"
+        },
+        "sampling": {
+          "spawns": 50,
+          "warmups": 10,
+          "reps": 5,
+          "timeTool": "/usr/bin/time (gnu)"
+        },
+        "profiles": {
+          "balanced-min": {
+            "startup-stdlib": 1.2289781392984238,
+            "json-parse": 0.6563352826510722,
+            "mandelbrot": 0.6815218062283169,
+            "timers": 0.7300638066911042
+          },
+          "tuned-min": {
+            "startup-stdlib": 1.22755465175394,
+            "json-parse": 0.6549707602339182,
+            "mandelbrot": 0.666355237038143,
+            "timers": 0.6751363126533835
+          },
+          "min": {
+            "startup-stdlib": 1.1918657854600914,
+            "json-parse": 0.6569200779727097,
+            "mandelbrot": 0.6887971937980987,
+            "timers": 0.7340334113208795
+          },
+          "ffi": {
+            "startup-stdlib": 1.2072191154041687,
+            "json-parse": 0.6407407407407407,
+            "mandelbrot": 0.6355873257063203,
+            "timers": 0.7060747548165385
+          },
+          "tls": {
+            "startup-stdlib": 1.2151499745805796,
+            "json-parse": 0.6326510721247564,
+            "mandelbrot": 0.6311047850459405,
+            "timers": 0.6834146011194765
+          },
+          "sqlite": {
+            "startup-stdlib": 1.2973055414336552,
+            "json-parse": 0.6411306042884991,
+            "mandelbrot": 0.6388003363552096,
+            "timers": 0.6747107337960444
+          },
+          "ffi-tls": {
+            "startup-stdlib": 1.2353838332486018,
+            "json-parse": 0.6270955165692008,
+            "mandelbrot": 0.673752578245643,
+            "timers": 0.7313509942852905
+          },
+          "ffi-tls-sqlite": {
+            "startup-stdlib": 1.2109811896288765,
+            "json-parse": 0.6356725146198831,
+            "mandelbrot": 0.6875022640775172,
+            "timers": 0.6903637108919856
+          }
+        }
+      },
+      {
+        "version": "slim-v26.6.0-10",
+        "commit": "d684c95b297f64230cc7390e0e839fc4180d5411",
+        "date": "2026-10-27T07:25:18.343Z",
+        "platform": "macos-arm64",
+        "quick": false,
+        "runner": {
+          "image": "macos15",
+          "ci": true,
+          "cpuModel": "Apple M1 (Virtual)",
+          "cores": 3,
+          "memTotal": 7516192768,
+          "release": "24.6.0"
+        },
+        "toolchain": {
+          "cc": "Apple clang version 17.0.0 (clang-1700.0.13.5)",
+          "cmake": "cmake version 4.4.3",
+          "node": "v24.22.1"
+        },
+        "sampling": {
+          "spawns": 50,
+          "warmups": 10,
+          "reps": 5,
+          "timeTool": "/usr/bin/time (bsd)"
+        },
+        "profiles": {
+          "balanced-min": {
+            "startup-stdlib": 1.259958932238193,
+            "json-parse": 0.6630790190735695,
+            "mandelbrot": 0.7107071762600267,
+            "timers": 0.6720260321814976
+          },
+          "tuned-min": {
+            "startup-stdlib": 1.0169199178644763,
+            "json-parse": 0.6478882833787465,
+            "mandelbrot": 0.7252338788897852,
+            "timers": 0.7137778833443426
+          },
+          "min": {
+            "startup-stdlib": 1.2782751540041069,
+            "json-parse": 0.47717983651226153,
+            "mandelbrot": 0.5700684558126845,
+            "timers": 0.6183811658098419
+          },
+          "ffi": {
+            "startup-stdlib": 1.1587679671457904,
+            "json-parse": 0.5957765667574931,
+            "mandelbrot": 0.6511747742182216,
+            "timers": 0.625695189062058
+          },
+          "tls": {
+            "startup-stdlib": 1.268911704312115,
+            "json-parse": 0.49891008174386914,
+            "mandelbrot": 0.6036131447097722,
+            "timers": 0.6323646594895805
+          },
+          "sqlite": {
+            "startup-stdlib": 1.5330595482546199,
+            "json-parse": 0.5009536784741144,
+            "mandelbrot": 0.5646649405453119,
+            "timers": 0.6239794334776054
+          },
+          "ffi-tls": {
+            "startup-stdlib": 1.3253388090349074,
+            "json-parse": 0.49564032697547683,
+            "mandelbrot": 0.5557979218524979,
+            "timers": 0.6842547513404512
+          },
+          "ffi-tls-sqlite": {
+            "startup-stdlib": 1.4781930184804928,
+            "json-parse": 0.48501362397820164,
+            "mandelbrot": 0.5873142805549876,
+            "timers": 0.6009447482248284
+          }
+        }
       }
     ]
   }
