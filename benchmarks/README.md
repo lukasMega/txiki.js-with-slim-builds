@@ -4,228 +4,236 @@
      `node benchmarks/report.mjs` (or `--check` to verify it is current).
      The Methodology and Limits prose lives in benchmarks/METHODOLOGY.md. -->
 
-2 recorded runs across 2 platforms (`linux-x86_64`, `macos-arm64`).
-Newest: **slim-v26.6.0-8-4-g709c52a** on `macos-arm64`, measured 2026-08-24T21:09:25.053Z.
+4 recorded runs across 2 platforms (`linux-x86_64`, `macos-arm64`).
+Newest: **slim-v26.6.0-10** on `macos-arm64`, measured 2026-10-27T07:25:18.343Z.
 
 ## Latest run
 
-### `linux-x86_64` — slim-v26.6.0-8-4-g709c52a
+### `linux-x86_64` — slim-v26.6.0-10
 
 | field | value |
 | --- | --- |
-| commit | `709c52a2709b8ae864e9ea539edc7111f4e80fe3` |
-| date | 2026-08-24T21:06:54.550Z |
-| runner | ubuntu24, AMD EPYC 9V74 80-Core Processor, 4 cores, 15.6 GiB RAM |
-| toolchain | cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, cmake version 3.31.6, node v24.19.0 |
+| commit | `d684c95b297f64230cc7390e0e839fc4180d5411` |
+| date | 2026-10-27T07:22:48.712Z |
+| runner | ubuntu24, AMD EPYC 7763 64-Core Processor, 4 cores, 15.6 GiB RAM |
+| toolchain | cc (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0, cmake version 3.31.6, node v24.22.1 |
 | sampling | 50 spawns, 10 warmups, best of 5 reps, /usr/bin/time (gnu) |
-| source | `history/linux-x86_64/slim-v26.6.0-8-4-g709c52a.json` |
+| source | `history/linux-x86_64/slim-v26.6.0-10.json` |
 
 | binary | path | features on | features off | CLI subcommands |
 | --- | --- | --- | --- | ---: |
 | `full` | `build/tjs` | `bundledCa` `ffi` `sqlite` `tls` `wasm` `webcrypto` | — | 9/9 |
+| `balanced-min` | `dist/balanced-min/tjs` | `webcrypto` | `bundledCa` `ffi` `sqlite` `tls` `wasm` | 2/9 |
+| `tuned-min` | `dist/tuned-min/tjs` | `webcrypto` | `bundledCa` `ffi` `sqlite` `tls` `wasm` | 2/9 |
 | `min` | `dist/min/tjs` | `webcrypto` | `bundledCa` `ffi` `sqlite` `tls` `wasm` | 2/9 |
 | `ffi` | `dist/ffi/tjs` | `ffi` `webcrypto` | `bundledCa` `sqlite` `tls` `wasm` | 2/9 |
 | `tls` | `dist/tls/tjs` | `bundledCa` `tls` `webcrypto` | `ffi` `sqlite` `wasm` | 3/9 |
 | `ffi-tls` | `dist/ffi-tls/tjs` | `bundledCa` `ffi` `tls` `webcrypto` | `sqlite` `wasm` | 3/9 |
+| `ffi-tls-sqlite` | `dist/ffi-tls-sqlite/tjs` | `bundledCa` `ffi` `sqlite` `tls` `webcrypto` | `wasm` | 3/9 |
+| `sqlite` | `dist/sqlite/tjs` | `sqlite` `webcrypto` | `bundledCa` `ffi` `tls` `wasm` | 2/9 |
 
 #### Size
 
-| metric | `full` | `min` | `ffi` | `tls` | `ffi-tls` |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| binary size, raw (bytes) | 8 900 848 | 1 914 824 | 1 964 424 | 2 365 536 | 2 406 944 |
-| binary size, gzip -9 (bytes) | 4 142 148 | 1 044 181 | 1 076 206 | 1 327 295 | 1 359 229 |
-| text segment (bytes) | 6 510 915 | 1 823 147 | 1 866 870 | 2 266 424 | 2 309 939 |
-| data segment (bytes) | 162 148 | 84 752 | 86 704 | 90 968 | 92 920 |
+| metric | `full` | `balanced-min` | `tuned-min` | `min` | `ffi` | `tls` | `ffi-tls` | `ffi-tls-sqlite` | `sqlite` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary size, raw (bytes) | 9 144 328 | 1 931 296 | 1 931 296 | 1 931 296 | 1 976 800 | 2 386 264 | 2 431 800 | 3 234 200 | 2 729 584 |
+| binary size, gzip -9 (bytes) | 4 241 426 | 1 050 755 | 1 050 753 | 1 050 754 | 1 083 681 | 1 337 937 | 1 369 533 | 1 834 349 | 1 516 612 |
+| text segment (bytes) | 6 549 579 | 1 837 667 | 1 837 667 | 1 837 667 | 1 881 518 | 2 285 416 | 2 329 123 | 3 102 439 | 2 611 210 |
+| data segment (bytes) | 163 928 | 86 056 | 86 056 | 86 056 | 88 008 | 92 528 | 94 512 | 121 456 | 113 064 |
 
 Ratio vs `full` — bold marks a value more than 5% worse than `full`.
 
-| metric | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` |
-| --- | ---: | ---: | ---: | ---: |
-| binary size, raw (bytes) | 0.22× | 0.22× | 0.27× | 0.27× |
-| binary size, gzip -9 (bytes) | 0.25× | 0.26× | 0.32× | 0.33× |
-| text segment (bytes) | 0.28× | 0.29× | 0.35× | 0.35× |
-| data segment (bytes) | 0.52× | 0.53× | 0.56× | 0.57× |
+| metric | `balanced-min` ÷ `full` | `tuned-min` ÷ `full` | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` | `ffi-tls-sqlite` ÷ `full` | `sqlite` ÷ `full` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary size, raw (bytes) | 0.21× | 0.21× | 0.21× | 0.22× | 0.26× | 0.27× | 0.35× | 0.30× |
+| binary size, gzip -9 (bytes) | 0.25× | 0.25× | 0.25× | 0.26× | 0.32× | 0.32× | 0.43× | 0.36× |
+| text segment (bytes) | 0.28× | 0.28× | 0.28× | 0.29× | 0.35× | 0.36× | 0.47× | 0.40× |
+| data segment (bytes) | 0.52× | 0.52× | 0.52× | 0.54× | 0.56× | 0.58× | 0.74× | 0.69× |
 
 #### Startup, memory, CPU
 
-| metric | `full` | `min` | `ffi` | `tls` | `ffi-tls` |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| startup, noop (ms) | 7.62 | 9.24 | 9.38 | 9.38 | 9.38 |
-| startup, noop MAD (ms) | 0.35 | 0.04 | 0.07 | 0.06 | 0.07 |
-| startup, +stdlib (ms) | 7.66 | 9.42 | 9.53 | 9.55 | 9.59 |
-| startup, +stdlib MAD (ms) | 0.26 | 0.07 | 0.06 | 0.06 | 0.07 |
-| baseline RSS (MiB) | 17.91 | 7.09 | 7.25 | 7.31 | 7.42 |
-| peak RSS, eventloop (MiB) | 73.67 | 42.04 | 42.13 | 42.12 | 42.18 |
-| CPU user (s) | 0.79 | 1.12 | 1.12 | 1.12 | 1.13 |
-| CPU sys (s) | 0.00 | 0.01 | 0.02 | 0.01 | 0.01 |
-| CPU efficiency ((user+sys)/wall) | — | — | — | — | — |
+| metric | `full` | `balanced-min` | `tuned-min` | `min` | `ffi` | `tls` | `ffi-tls` | `ffi-tls-sqlite` | `sqlite` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| startup, noop (ms) | 9.41 | 11.83 | 11.56 | 11.51 | 11.63 | 11.72 | 11.57 | 11.65 | 11.59 |
+| startup, noop MAD (ms) | 0.31 | 0.11 | 0.06 | 0.07 | 0.07 | 0.10 | 0.05 | 0.07 | 0.10 |
+| startup, +stdlib (ms) | 9.84 | 12.09 | 12.07 | 11.72 | 11.87 | 11.95 | 12.15 | 11.91 | 12.76 |
+| startup, +stdlib MAD (ms) | 0.46 | 0.11 | 0.17 | 0.07 | 0.09 | 0.15 | 0.20 | 0.06 | 0.17 |
+| baseline RSS (MiB) | 17.50 | 7.05 | 7.05 | 7.09 | 7.16 | 7.24 | 7.29 | 7.36 | 7.14 |
+| peak RSS, eventloop (MiB) | 73.32 | 41.82 | 41.86 | 41.86 | 41.95 | 41.99 | 42.11 | 42.35 | 41.95 |
+| CPU user (s) | 1.04 | 1.56 | 1.75 | 1.55 | 1.58 | 1.68 | 1.55 | 1.63 | 1.61 |
+| CPU sys (s) | 0.00 | 0.02 | 0.02 | 0.02 | 0.02 | 0.01 | 0.01 | 0.01 | 0.02 |
+| CPU efficiency ((user+sys)/wall) | — | — | — | — | — | — | — | — | — |
 
 Ratio vs `full` — bold marks a value more than 5% worse than `full`.
 
-| metric | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` |
-| --- | ---: | ---: | ---: | ---: |
-| startup, noop (ms) | **1.21×** | **1.23×** | **1.23×** | **1.23×** |
-| startup, +stdlib (ms) | **1.23×** | **1.24×** | **1.25×** | **1.25×** |
-| baseline RSS (MiB) | 0.40× | 0.41× | 0.41× | 0.41× |
-| peak RSS, eventloop (MiB) | 0.57× | 0.57× | 0.57× | 0.57× |
-| CPU user (s) | **1.42×** | **1.42×** | **1.42×** | **1.43×** |
-| CPU sys (s) | — | — | — | — |
+| metric | `balanced-min` ÷ `full` | `tuned-min` ÷ `full` | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` | `ffi-tls-sqlite` ÷ `full` | `sqlite` ÷ `full` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| startup, noop (ms) | **1.26×** | **1.23×** | **1.22×** | **1.24×** | **1.25×** | **1.23×** | **1.24×** | **1.23×** |
+| startup, +stdlib (ms) | **1.23×** | **1.23×** | **1.19×** | **1.21×** | **1.22×** | **1.24×** | **1.21×** | **1.30×** |
+| baseline RSS (MiB) | 0.40× | 0.40× | 0.41× | 0.41× | 0.41× | 0.42× | 0.42× | 0.41× |
+| peak RSS, eventloop (MiB) | 0.57× | 0.57× | 0.57× | 0.57× | 0.57× | 0.57× | 0.58× | 0.57× |
+| CPU user (s) | **1.50×** | **1.68×** | **1.49×** | **1.52×** | **1.62×** | **1.49×** | **1.57×** | **1.55×** |
+| CPU sys (s) | — | — | — | — | — | — | — | — |
 
 #### Throughput
 
-| metric | `full` | `min` | `ffi` | `tls` | `ffi-tls` |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| mandelbrot (px/s) | 378 716 | 220 396 | 257 190 | 251 150 | 262 588 |
-| array sort (elem/s) | 1 794 688 | 1 165 264 | 1 180 080 | 1 168 272 | 1 169 269 |
-| string build (items/s) | 4 413 387 | 2 693 603 | 2 703 312 | 2 724 424 | 2 682 763 |
-| JSON.parse (docs/s) | 150.1 | 95.0 | 91.5 | 91.5 | 88.8 |
-| JSON.parse (MiB/s) | 106.6 | 67.4 | 65.0 | 65.0 | 63.1 |
-| JSON.stringify (docs/s) | 94.0 | 57.0 | 55.5 | 56.8 | 56.2 |
-| regex match (lines/s) | 1 217 730 | 793 651 | 817 829 | 941 398 | 941 442 |
-| regex replace (corpus/s) | 39.1 | 24.9 | 25.9 | 26.6 | 27.2 |
-| regex split (corpus/s) | 10.3 | 5.8 | 5.8 | 5.8 | 5.9 |
-| SHA-256 (digests/s) | 1 163 | 1 249 | 1 249 | 1 244 | 1 247 |
-| SHA-256 (MiB/s) | 290.8 | 312.4 | 312.4 | 311.0 | 311.8 |
-| getRandomValues (calls/s) | 55 735 | 55 215 | 55 118 | 55 238 | 55 290 |
-| timers (timers/s) | 1 794 891 | 1 312 226 | 1 316 065 | 1 320 397 | 1 302 428 |
-| microtasks (tasks/s) | 2 184 331 | 1 411 210 | 1 378 945 | 1 382 564 | 1 412 525 |
-| fs write (files/s) | 11 257 | 10 657 | 10 969 | 11 289 | 10 829 |
-| fs read (files/s) | 27 714 | 27 015 | 26 935 | 26 455 | 27 037 |
-| fs stat (stats/s) | 32 217 | 28 705 | 30 205 | 29 562 | 29 715 |
-| fs readdir (scans/s) | 163.9 | 171.0 | 160.6 | 166.6 | 163.6 |
+| metric | `full` | `balanced-min` | `tuned-min` | `min` | `ffi` | `tls` | `ffi-tls` | `ffi-tls-sqlite` | `sqlite` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| mandelbrot (px/s) | 285 436 | 194 531 | 190 202 | 196 608 | 181 420 | 180 140 | 192 313 | 196 238 | 182 337 |
+| array sort (elem/s) | 1 411 991 | 719 663 | 721 391 | 723 024 | 726 615 | 732 048 | 727 357 | 716 196 | 697 092 |
+| string build (items/s) | 3 300 875 | 1 686 815 | 1 678 697 | 1 681 379 | 1 632 653 | 1 668 010 | 1 676 680 | 1 656 772 | 1 660 256 |
+| JSON.parse (docs/s) | 102.6 | 67.3 | 67.2 | 67.4 | 65.7 | 64.9 | 64.3 | 65.2 | 65.8 |
+| JSON.parse (MiB/s) | 72.9 | 47.8 | 47.7 | 47.9 | 46.7 | 46.1 | 45.7 | 46.3 | 46.7 |
+| JSON.stringify (docs/s) | 66.4 | 39.1 | 38.7 | 38.9 | 38.2 | 38.5 | 34.9 | 37.7 | 39.3 |
+| regex match (lines/s) | 1 075 038 | 600 727 | 599 628 | 601 594 | 564 780 | 588 391 | 602 973 | 599 916 | 587 113 |
+| regex replace (corpus/s) | 36.9 | 18.8 | 19.2 | 19.4 | 18.6 | 18.3 | 19.1 | 18.7 | 18.5 |
+| regex split (corpus/s) | 7.9 | 3.5 | 3.5 | 3.5 | 3.5 | 3.5 | 3.5 | 3.5 | 3.5 |
+| SHA-256 (digests/s) | 978.8 | 995.7 | 999.0 | 1 001 | 1 001 | 988.2 | 993.3 | 992.6 | 995.4 |
+| SHA-256 (MiB/s) | 244.7 | 248.9 | 249.8 | 250.3 | 250.3 | 247.1 | 248.3 | 248.2 | 248.8 |
+| getRandomValues (calls/s) | 55 115 | 53 907 | 53 710 | 54 148 | 53 694 | 53 923 | 53 690 | 53 789 | 53 771 |
+| timers (timers/s) | 1 390 295 | 1 015 004 | 938 638 | 1 020 523 | 981 652 | 950 148 | 1 016 793 | 959 809 | 938 047 |
+| microtasks (tasks/s) | 1 684 432 | 874 202 | 883 881 | 884 330 | 891 690 | 896 580 | 905 290 | 882 856 | 888 426 |
+| fs write (files/s) | 6 971 | 7 093 | 7 404 | 6 747 | 6 640 | 6 626 | 7 225 | 7 000 | 7 402 |
+| fs read (files/s) | 17 781 | 17 326 | 18 276 | 17 525 | 17 117 | 17 852 | 17 531 | 18 359 | 18 917 |
+| fs stat (stats/s) | 21 494 | 19 185 | 19 102 | 18 829 | 18 175 | 19 477 | 18 563 | 19 029 | 19 410 |
+| fs readdir (scans/s) | 107.8 | 101.4 | 107.4 | 103.9 | 110.3 | 103.9 | 107.2 | 105.1 | 110.2 |
 
 Ratio vs `full` — bold marks a value more than 5% worse than `full`.
 
-| metric | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` |
-| --- | ---: | ---: | ---: | ---: |
-| mandelbrot (px/s) | **0.58×** | **0.68×** | **0.66×** | **0.69×** |
-| array sort (elem/s) | **0.65×** | **0.66×** | **0.65×** | **0.65×** |
-| string build (items/s) | **0.61×** | **0.61×** | **0.62×** | **0.61×** |
-| JSON.parse (docs/s) | **0.63×** | **0.61×** | **0.61×** | **0.59×** |
-| JSON.parse (MiB/s) | **0.63×** | **0.61×** | **0.61×** | **0.59×** |
-| JSON.stringify (docs/s) | **0.61×** | **0.59×** | **0.60×** | **0.60×** |
-| regex match (lines/s) | **0.65×** | **0.67×** | **0.77×** | **0.77×** |
-| regex replace (corpus/s) | **0.64×** | **0.66×** | **0.68×** | **0.70×** |
-| regex split (corpus/s) | **0.56×** | **0.56×** | **0.56×** | **0.57×** |
-| SHA-256 (digests/s) | 1.07× | 1.07× | 1.07× | 1.07× |
-| SHA-256 (MiB/s) | 1.07× | 1.07× | 1.07× | 1.07× |
-| getRandomValues (calls/s) | 0.99× | 0.99× | 0.99× | 0.99× |
-| timers (timers/s) | **0.73×** | **0.73×** | **0.74×** | **0.73×** |
-| microtasks (tasks/s) | **0.65×** | **0.63×** | **0.63×** | **0.65×** |
-| fs write (files/s) | **0.95×** | 0.97× | 1.00× | 0.96× |
-| fs read (files/s) | 0.97× | 0.97× | 0.95× | 0.98× |
-| fs stat (stats/s) | **0.89×** | **0.94×** | **0.92×** | **0.92×** |
-| fs readdir (scans/s) | 1.04× | 0.98× | 1.02× | 1.00× |
+| metric | `balanced-min` ÷ `full` | `tuned-min` ÷ `full` | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` | `ffi-tls-sqlite` ÷ `full` | `sqlite` ÷ `full` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| mandelbrot (px/s) | **0.68×** | **0.67×** | **0.69×** | **0.64×** | **0.63×** | **0.67×** | **0.69×** | **0.64×** |
+| array sort (elem/s) | **0.51×** | **0.51×** | **0.51×** | **0.51×** | **0.52×** | **0.52×** | **0.51×** | **0.49×** |
+| string build (items/s) | **0.51×** | **0.51×** | **0.51×** | **0.49×** | **0.51×** | **0.51×** | **0.50×** | **0.50×** |
+| JSON.parse (docs/s) | **0.66×** | **0.65×** | **0.66×** | **0.64×** | **0.63×** | **0.63×** | **0.64×** | **0.64×** |
+| JSON.parse (MiB/s) | **0.66×** | **0.66×** | **0.66×** | **0.64×** | **0.63×** | **0.63×** | **0.64×** | **0.64×** |
+| JSON.stringify (docs/s) | **0.59×** | **0.58×** | **0.59×** | **0.58×** | **0.58×** | **0.52×** | **0.57×** | **0.59×** |
+| regex match (lines/s) | **0.56×** | **0.56×** | **0.56×** | **0.53×** | **0.55×** | **0.56×** | **0.56×** | **0.55×** |
+| regex replace (corpus/s) | **0.51×** | **0.52×** | **0.53×** | **0.50×** | **0.50×** | **0.52×** | **0.51×** | **0.50×** |
+| regex split (corpus/s) | **0.44×** | **0.44×** | **0.44×** | **0.44×** | **0.45×** | **0.44×** | **0.44×** | **0.44×** |
+| SHA-256 (digests/s) | 1.02× | 1.02× | 1.02× | 1.02× | 1.01× | 1.01× | 1.01× | 1.02× |
+| SHA-256 (MiB/s) | 1.02× | 1.02× | 1.02× | 1.02× | 1.01× | 1.01× | 1.01× | 1.02× |
+| getRandomValues (calls/s) | 0.98× | 0.97× | 0.98× | 0.97× | 0.98× | 0.97× | 0.98× | 0.98× |
+| timers (timers/s) | **0.73×** | **0.68×** | **0.73×** | **0.71×** | **0.68×** | **0.73×** | **0.69×** | **0.67×** |
+| microtasks (tasks/s) | **0.52×** | **0.52×** | **0.53×** | **0.53×** | **0.53×** | **0.54×** | **0.52×** | **0.53×** |
+| fs write (files/s) | 1.02× | 1.06× | 0.97× | 0.95× | 0.95× | 1.04× | 1.00× | 1.06× |
+| fs read (files/s) | 0.97× | 1.03× | 0.99× | 0.96× | 1.00× | 0.99× | 1.03× | 1.06× |
+| fs stat (stats/s) | **0.89×** | **0.89×** | **0.88×** | **0.85×** | **0.91×** | **0.86×** | **0.89×** | **0.90×** |
+| fs readdir (scans/s) | **0.94×** | 1.00× | 0.96× | 1.02× | 0.96× | 0.99× | 0.97× | 1.02× |
 
-### `macos-arm64` — slim-v26.6.0-8-4-g709c52a
+### `macos-arm64` — slim-v26.6.0-10
 
 | field | value |
 | --- | --- |
-| commit | `709c52a2709b8ae864e9ea539edc7111f4e80fe3` |
-| date | 2026-08-24T21:09:25.053Z |
+| commit | `d684c95b297f64230cc7390e0e839fc4180d5411` |
+| date | 2026-10-27T07:25:18.343Z |
 | runner | macos15, Apple M1 (Virtual), 3 cores, 7.0 GiB RAM |
-| toolchain | Apple clang version 17.0.0 (clang-1700.0.13.5), cmake version 4.4.0, node v24.19.0 |
+| toolchain | Apple clang version 17.0.0 (clang-1700.0.13.5), cmake version 4.4.3, node v24.22.1 |
 | sampling | 50 spawns, 10 warmups, best of 5 reps, /usr/bin/time (bsd) |
-| source | `history/macos-arm64/slim-v26.6.0-8-4-g709c52a.json` |
+| source | `history/macos-arm64/slim-v26.6.0-10.json` |
 
 | binary | path | features on | features off | CLI subcommands |
 | --- | --- | --- | --- | ---: |
 | `full` | `build/tjs` | `bundledCa` `ffi` `sqlite` `tls` `wasm` `webcrypto` | — | 9/9 |
+| `balanced-min` | `dist/balanced-min/tjs` | `webcrypto` | `bundledCa` `ffi` `sqlite` `tls` `wasm` | 2/9 |
+| `tuned-min` | `dist/tuned-min/tjs` | `webcrypto` | `bundledCa` `ffi` `sqlite` `tls` `wasm` | 2/9 |
 | `min` | `dist/min/tjs` | `webcrypto` | `bundledCa` `ffi` `sqlite` `tls` `wasm` | 2/9 |
 | `ffi` | `dist/ffi/tjs` | `ffi` `webcrypto` | `bundledCa` `sqlite` `tls` `wasm` | 2/9 |
 | `tls` | `dist/tls/tjs` | `bundledCa` `tls` `webcrypto` | `ffi` `sqlite` `wasm` | 3/9 |
 | `ffi-tls` | `dist/ffi-tls/tjs` | `bundledCa` `ffi` `tls` `webcrypto` | `sqlite` `wasm` | 3/9 |
+| `ffi-tls-sqlite` | `dist/ffi-tls-sqlite/tjs` | `bundledCa` `ffi` `sqlite` `tls` `webcrypto` | `wasm` | 3/9 |
+| `sqlite` | `dist/sqlite/tjs` | `sqlite` `webcrypto` | `bundledCa` `ffi` `tls` `wasm` | 2/9 |
 
 #### Size
 
-| metric | `full` | `min` | `ffi` | `tls` | `ffi-tls` |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| binary size, raw (bytes) | 6 064 768 | 2 008 960 | 2 059 776 | 2 506 016 | 2 540 336 |
-| binary size, gzip -9 (bytes) | 2 899 589 | 1 095 741 | 1 130 686 | 1 394 133 | 1 427 082 |
-| text segment (bytes) | 5 226 496 | 1 884 160 | 1 933 312 | 2 359 296 | 2 392 064 |
-| data segment (bytes) | 98 304 | 16 384 | 16 384 | 16 384 | 16 384 |
+| metric | `full` | `balanced-min` | `tuned-min` | `min` | `ffi` | `tls` | `ffi-tls` | `ffi-tls-sqlite` | `sqlite` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary size, raw (bytes) | 6 092 384 | 2 140 608 | 2 074 288 | 2 025 536 | 2 059 840 | 2 522 608 | 2 556 928 | 3 503 568 | 2 955 648 |
+| binary size, gzip -9 (bytes) | 2 910 606 | 1 127 287 | 1 079 363 | 1 102 787 | 1 135 378 | 1 402 310 | 1 434 986 | 1 957 425 | 1 624 197 |
+| text segment (bytes) | 5 242 880 | 2 015 232 | 1 949 696 | 1 900 544 | 1 933 312 | 2 375 680 | 2 408 448 | 3 309 568 | 2 785 280 |
+| data segment (bytes) | 98 304 | 16 384 | 16 384 | 16 384 | 16 384 | 16 384 | 16 384 | 32 768 | 32 768 |
 
 Ratio vs `full` — bold marks a value more than 5% worse than `full`.
 
-| metric | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` |
-| --- | ---: | ---: | ---: | ---: |
-| binary size, raw (bytes) | 0.33× | 0.34× | 0.41× | 0.42× |
-| binary size, gzip -9 (bytes) | 0.38× | 0.39× | 0.48× | 0.49× |
-| text segment (bytes) | 0.36× | 0.37× | 0.45× | 0.46× |
-| data segment (bytes) | 0.17× | 0.17× | 0.17× | 0.17× |
+| metric | `balanced-min` ÷ `full` | `tuned-min` ÷ `full` | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` | `ffi-tls-sqlite` ÷ `full` | `sqlite` ÷ `full` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| binary size, raw (bytes) | 0.35× | 0.34× | 0.33× | 0.34× | 0.41× | 0.42× | 0.58× | 0.49× |
+| binary size, gzip -9 (bytes) | 0.39× | 0.37× | 0.38× | 0.39× | 0.48× | 0.49× | 0.67× | 0.56× |
+| text segment (bytes) | 0.38× | 0.37× | 0.36× | 0.37× | 0.45× | 0.46× | 0.63× | 0.53× |
+| data segment (bytes) | 0.17× | 0.17× | 0.17× | 0.17× | 0.17× | 0.17× | 0.33× | 0.33× |
 
 #### Startup, memory, CPU
 
-| metric | `full` | `min` | `ffi` | `tls` | `ffi-tls` |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| startup, noop (ms) | 12.17 \* | 11.73 | 11.04 | 10.58 \* | 10.80 \* |
-| startup, noop MAD (ms) | 1.95 | 0.42 | 0.35 | 1.17 | 0.72 |
-| startup, +stdlib (ms) | 12.63 \* | 11.29 | 10.52 \* | 11.13 \* | 10.71 \* |
-| startup, +stdlib MAD (ms) | 1.05 | 0.52 | 1.00 | 0.67 | 1.03 |
-| baseline RSS (MiB) | 5.55 | 4.48 | 4.42 | 4.59 | 4.58 |
-| peak RSS, eventloop (MiB) | 61.14 | 47.50 | 62.02 | 61.44 | 61.80 |
-| CPU user (s) | 0.66 | 1.16 | 1.26 | 1.22 | 1.28 |
-| CPU sys (s) | 0.00 | 0.03 | 0.03 | 0.05 | 0.04 |
-| CPU efficiency ((user+sys)/wall) | 0.98 | 1.00 | 0.98 | 1.00 | 1.00 |
+| metric | `full` | `balanced-min` | `tuned-min` | `min` | `ffi` | `tls` | `ffi-tls` | `ffi-tls-sqlite` | `sqlite` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| startup, noop (ms) | 12.57 \* | 16.38 \* | 13.47 \* | 14.66 \* | 17.08 \* | 15.53 \* | 14.83 \* | 15.39 \* | 15.93 \* |
+| startup, noop MAD (ms) | 0.93 | 2.75 | 1.48 | 1.40 | 2.42 | 1.97 | 2.34 | 1.84 | 1.92 |
+| startup, +stdlib (ms) | 12.18 \* | 15.34 \* | 12.38 \* | 15.56 \* | 14.11 \* | 15.45 \* | 16.14 \* | 18.00 \* | 18.66 \* |
+| startup, +stdlib MAD (ms) | 0.97 | 2.59 | 1.68 | 2.30 | 1.59 | 1.97 | 2.21 | 1.49 | 2.12 |
+| baseline RSS (MiB) | 5.61 | 4.72 | 4.58 | 4.42 | 4.44 | 4.64 | 4.64 | 4.97 | 4.61 |
+| peak RSS, eventloop (MiB) | 61.13 | 61.45 | 59.64 | 60.67 | 61.98 | 61.50 | 59.36 | 61.59 | 59.88 |
+| CPU user (s) | 0.98 | 1.62 | 1.74 | 1.90 | 1.78 | 1.83 | 1.86 | 1.81 | 1.73 |
+| CPU sys (s) | 0.02 | 0.07 | 0.07 | 0.07 | 0.05 | 0.06 | 0.07 | 0.06 | 0.05 |
+| CPU efficiency ((user+sys)/wall) | 0.99 | 0.92 | 0.99 | 0.96 | 0.98 | 0.99 | 0.98 | 0.99 | 0.99 |
 
 Ratio vs `full` — bold marks a value more than 5% worse than `full`.
 
-| metric | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` |
-| --- | ---: | ---: | ---: | ---: |
-| startup, noop (ms) | 0.96× | 0.91× | 0.87× | 0.89× |
-| startup, +stdlib (ms) | 0.89× | 0.83× | 0.88× | 0.85× |
-| baseline RSS (MiB) | 0.81× | 0.80× | 0.83× | 0.83× |
-| peak RSS, eventloop (MiB) | 0.78× | 1.01× | 1.00× | 1.01× |
-| CPU user (s) | **1.76×** | **1.91×** | **1.85×** | **1.94×** |
-| CPU sys (s) | — | — | — | — |
+| metric | `balanced-min` ÷ `full` | `tuned-min` ÷ `full` | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` | `ffi-tls-sqlite` ÷ `full` | `sqlite` ÷ `full` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| startup, noop (ms) | **1.30×** | **1.07×** | **1.17×** | **1.36×** | **1.24×** | **1.18×** | **1.22×** | **1.27×** |
+| startup, +stdlib (ms) | **1.26×** | 1.02× | **1.28×** | **1.16×** | **1.27×** | **1.33×** | **1.48×** | **1.53×** |
+| baseline RSS (MiB) | 0.84× | 0.82× | 0.79× | 0.79× | 0.83× | 0.83× | 0.89× | 0.82× |
+| peak RSS, eventloop (MiB) | 1.01× | 0.98× | 0.99× | 1.01× | 1.01× | 0.97× | 1.01× | 0.98× |
+| CPU user (s) | **1.65×** | **1.78×** | **1.94×** | **1.82×** | **1.87×** | **1.90×** | **1.85×** | **1.77×** |
+| CPU sys (s) | **3.50×** | **3.50×** | **3.50×** | **2.50×** | **3.00×** | **3.50×** | **3.00×** | **2.50×** |
 
 \* MAD exceeds 5% of the median: unstable in this run (METHODOLOGY.md rule 4).
 
 #### Throughput
 
-| metric | `full` | `min` | `ffi` | `tls` | `ffi-tls` |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| mandelbrot (px/s) | 278 647 | 198 412 | 197 673 | 201 548 | 201 872 |
-| array sort (elem/s) | 1 727 116 | 1 158 715 | 1 163 339 | 1 175 302 | 1 178 148 |
-| string build (items/s) | 3 409 672 | 2 227 089 | 2 222 058 | 2 271 695 | 2 222 963 |
-| JSON.parse (docs/s) | 155.8 | 102.3 | 99.5 | 102.3 | 102.7 |
-| JSON.parse (MiB/s) | 110.7 | 72.6 | 70.6 | 72.6 | 72.9 |
-| JSON.stringify (docs/s) | 90.8 | 47.2 | 45.5 | 46.7 | 46.6 |
-| regex match (lines/s) | 1 102 475 | 893 775 | 810 340 | 872 753 | 907 688 |
-| regex replace (corpus/s) | 33.8 | 28.5 | 29.5 | 29.5 | 31.6 |
-| regex split (corpus/s) | 12.1 | 6.4 | 6.4 | 6.2 | 6.2 |
-| SHA-256 (digests/s) | 1 139 | 1 193 | 1 227 | 1 204 | 1 209 |
-| SHA-256 (MiB/s) | 284.7 | 298.2 | 306.8 | 301.1 | 302.3 |
-| getRandomValues (calls/s) | 89 928 | 94 069 | 96 094 | 93 058 | 95 740 |
-| timers (timers/s) | 1 939 195 | 1 250 905 | 1 315 006 | 1 370 740 | 1 260 482 |
-| microtasks (tasks/s) | 2 819 522 | 1 369 443 | 1 354 881 | 1 364 871 | 1 366 195 |
-| fs write (files/s) | 8 218 | 5 917 | 6 962 | 5 954 | 6 922 |
-| fs read (files/s) | 28 555 | 17 989 | 19 544 | 17 480 | 19 596 |
-| fs stat (stats/s) | 38 846 | 22 791 | 24 562 | 21 998 | 24 233 |
-| fs readdir (scans/s) | 473.9 | 363.0 | 319.9 | 295.7 | 316.3 |
+| metric | `full` | `balanced-min` | `tuned-min` | `min` | `ffi` | `tls` | `ffi-tls` | `ffi-tls-sqlite` | `sqlite` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| mandelbrot (px/s) | 264 045 | 187 659 | 191 494 | 150 524 | 171 939 | 159 381 | 146 756 | 155 077 | 149 097 |
+| array sort (elem/s) | 1 461 582 | 1 177 149 | 1 112 149 | 861 174 | 863 371 | 864 835 | 858 340 | 873 710 | 815 142 |
+| string build (items/s) | 3 039 976 | 2 432 400 | 2 260 994 | 1 696 929 | 1 730 902 | 1 581 069 | 1 403 574 | 1 745 962 | 1 457 230 |
+| JSON.parse (docs/s) | 146.8 | 97.3 | 95.1 | 70.0 | 87.5 | 73.2 | 72.8 | 71.2 | 73.5 |
+| JSON.parse (MiB/s) | 104.3 | 69.1 | 67.5 | 49.8 | 62.1 | 52.0 | 51.7 | 50.6 | 52.2 |
+| JSON.stringify (docs/s) | 75.6 | 57.2 | 50.6 | 31.7 | 38.0 | 36.8 | 30.7 | 31.4 | 33.9 |
+| regex match (lines/s) | 1 086 484 | 812 546 | 771 516 | 807 200 | 741 290 | 841 114 | 711 136 | 736 811 | 626 861 |
+| regex replace (corpus/s) | 29.4 | 29.2 | 29.4 | 26.5 | 22.4 | 22.6 | 24.9 | 27.1 | 24.1 |
+| regex split (corpus/s) | 12.0 | 7.3 | 7.4 | 4.6 | 4.6 | 4.3 | 4.7 | 4.6 | 4.5 |
+| SHA-256 (digests/s) | 1 088 | 966.0 | 952.3 | 918.4 | 1 039 | 901.3 | 996.6 | 955.2 | 939.7 |
+| SHA-256 (MiB/s) | 272.0 | 241.5 | 238.1 | 229.6 | 259.7 | 225.3 | 249.2 | 238.8 | 234.9 |
+| getRandomValues (calls/s) | 68 531 | 71 687 | 65 800 | 70 839 | 89 578 | 67 570 | 86 569 | 67 148 | 72 532 |
+| timers (timers/s) | 1 289 887 | 866 837 | 920 692 | 797 642 | 807 076 | 815 679 | 882 611 | 775 151 | 804 863 |
+| microtasks (tasks/s) | 2 074 947 | 1 435 639 | 1 545 089 | 1 005 818 | 1 001 775 | 1 024 143 | 995 340 | 989 844 | 968 549 |
+| fs write (files/s) | 4 635 | 5 189 | 6 923 | 5 061 | 5 304 | 5 569 | 4 700 | 5 052 | 4 386 |
+| fs read (files/s) | 21 357 | 18 163 | 19 626 | 14 647 | 18 330 | 16 433 | 16 508 | 16 021 | 16 972 |
+| fs stat (stats/s) | 29 910 | 21 891 | 24 188 | 21 357 | 21 951 | 19 538 | 18 239 | 20 871 | 20 492 |
+| fs readdir (scans/s) | 294.3 | 348.9 | 391.2 | 320.1 | 273.2 | 266.9 | 211.6 | 240.4 | 255.7 |
 
 Ratio vs `full` — bold marks a value more than 5% worse than `full`.
 
-| metric | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` |
-| --- | ---: | ---: | ---: | ---: |
-| mandelbrot (px/s) | **0.71×** | **0.71×** | **0.72×** | **0.72×** |
-| array sort (elem/s) | **0.67×** | **0.67×** | **0.68×** | **0.68×** |
-| string build (items/s) | **0.65×** | **0.65×** | **0.67×** | **0.65×** |
-| JSON.parse (docs/s) | **0.66×** | **0.64×** | **0.66×** | **0.66×** |
-| JSON.parse (MiB/s) | **0.66×** | **0.64×** | **0.66×** | **0.66×** |
-| JSON.stringify (docs/s) | **0.52×** | **0.50×** | **0.51×** | **0.51×** |
-| regex match (lines/s) | **0.81×** | **0.74×** | **0.79×** | **0.82×** |
-| regex replace (corpus/s) | **0.84×** | **0.87×** | **0.87×** | **0.94×** |
-| regex split (corpus/s) | **0.53×** | **0.53×** | **0.51×** | **0.51×** |
-| SHA-256 (digests/s) | 1.05× | 1.08× | 1.06× | 1.06× |
-| SHA-256 (MiB/s) | 1.05× | 1.08× | 1.06× | 1.06× |
-| getRandomValues (calls/s) | 1.05× | 1.07× | 1.03× | 1.06× |
-| timers (timers/s) | **0.65×** | **0.68×** | **0.71×** | **0.65×** |
-| microtasks (tasks/s) | **0.49×** | **0.48×** | **0.48×** | **0.48×** |
-| fs write (files/s) | **0.72×** | **0.85×** | **0.72×** | **0.84×** |
-| fs read (files/s) | **0.63×** | **0.68×** | **0.61×** | **0.69×** |
-| fs stat (stats/s) | **0.59×** | **0.63×** | **0.57×** | **0.62×** |
-| fs readdir (scans/s) | **0.77×** | **0.67×** | **0.62×** | **0.67×** |
+| metric | `balanced-min` ÷ `full` | `tuned-min` ÷ `full` | `min` ÷ `full` | `ffi` ÷ `full` | `tls` ÷ `full` | `ffi-tls` ÷ `full` | `ffi-tls-sqlite` ÷ `full` | `sqlite` ÷ `full` |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| mandelbrot (px/s) | **0.71×** | **0.73×** | **0.57×** | **0.65×** | **0.60×** | **0.56×** | **0.59×** | **0.56×** |
+| array sort (elem/s) | **0.81×** | **0.76×** | **0.59×** | **0.59×** | **0.59×** | **0.59×** | **0.60×** | **0.56×** |
+| string build (items/s) | **0.80×** | **0.74×** | **0.56×** | **0.57×** | **0.52×** | **0.46×** | **0.57×** | **0.48×** |
+| JSON.parse (docs/s) | **0.66×** | **0.65×** | **0.48×** | **0.60×** | **0.50×** | **0.50×** | **0.49×** | **0.50×** |
+| JSON.parse (MiB/s) | **0.66×** | **0.65×** | **0.48×** | **0.60×** | **0.50×** | **0.50×** | **0.49×** | **0.50×** |
+| JSON.stringify (docs/s) | **0.76×** | **0.67×** | **0.42×** | **0.50×** | **0.49×** | **0.41×** | **0.42×** | **0.45×** |
+| regex match (lines/s) | **0.75×** | **0.71×** | **0.74×** | **0.68×** | **0.77×** | **0.65×** | **0.68×** | **0.58×** |
+| regex replace (corpus/s) | 0.99× | 1.00× | **0.90×** | **0.76×** | **0.77×** | **0.85×** | **0.92×** | **0.82×** |
+| regex split (corpus/s) | **0.61×** | **0.62×** | **0.39×** | **0.38×** | **0.36×** | **0.39×** | **0.39×** | **0.37×** |
+| SHA-256 (digests/s) | **0.89×** | **0.88×** | **0.84×** | 0.95× | **0.83×** | **0.92×** | **0.88×** | **0.86×** |
+| SHA-256 (MiB/s) | **0.89×** | **0.88×** | **0.84×** | 0.95× | **0.83×** | **0.92×** | **0.88×** | **0.86×** |
+| getRandomValues (calls/s) | 1.05× | 0.96× | 1.03× | 1.31× | 0.99× | 1.26× | 0.98× | 1.06× |
+| timers (timers/s) | **0.67×** | **0.71×** | **0.62×** | **0.63×** | **0.63×** | **0.68×** | **0.60×** | **0.62×** |
+| microtasks (tasks/s) | **0.69×** | **0.74×** | **0.48×** | **0.48×** | **0.49×** | **0.48×** | **0.48×** | **0.47×** |
+| fs write (files/s) | 1.12× | 1.49× | 1.09× | 1.14× | 1.20× | 1.01× | 1.09× | **0.95×** |
+| fs read (files/s) | **0.85×** | **0.92×** | **0.69×** | **0.86×** | **0.77×** | **0.77×** | **0.75×** | **0.79×** |
+| fs stat (stats/s) | **0.73×** | **0.81×** | **0.71×** | **0.73×** | **0.65×** | **0.61×** | **0.70×** | **0.69×** |
+| fs readdir (scans/s) | 1.19× | 1.33× | 1.09× | **0.93×** | **0.91×** | **0.72×** | **0.82×** | **0.87×** |
 
 ## Trend across releases
 
@@ -234,11 +242,139 @@ numbers from different jobs are not comparable, the ratio is. Ordered oldest fir
 
 ### `linux-x86_64`
 
-Only one run recorded on this platform; a trend needs at least two.
+#### `full` absolute size (bytes)
+
+The one metric that is exact and machine-independent, so it is shown absolute
+rather than as a ratio.
+
+| version | raw | gzip -9 |
+| --- | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 8 900 848 | 4 142 148 |
+| slim-v26.6.0-10 | 9 144 328 | 4 241 426 |
+
+#### `balanced-min` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.21× | 0.25× | **1.26×** | **1.23×** | 0.40× | 0.57× | **0.68×** | **0.73×** | 1.02× |
+
+#### `tuned-min` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.21× | 0.25× | **1.23×** | **1.23×** | 0.40× | 0.57× | **0.67×** | **0.68×** | 1.02× |
+
+#### `min` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.22× | 0.25× | **1.21×** | **1.23×** | 0.40× | 0.57× | **0.58×** | **0.73×** | 1.07× |
+| slim-v26.6.0-10 | 0.21× | 0.25× | **1.22×** | **1.19×** | 0.41× | 0.57× | **0.69×** | **0.73×** | 1.02× |
+
+#### `ffi` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.22× | 0.26× | **1.23×** | **1.24×** | 0.41× | 0.57× | **0.68×** | **0.73×** | 1.07× |
+| slim-v26.6.0-10 | 0.22× | 0.26× | **1.24×** | **1.21×** | 0.41× | 0.57× | **0.64×** | **0.71×** | 1.02× |
+
+#### `tls` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.27× | 0.32× | **1.23×** | **1.25×** | 0.41× | 0.57× | **0.66×** | **0.74×** | 1.07× |
+| slim-v26.6.0-10 | 0.26× | 0.32× | **1.25×** | **1.22×** | 0.41× | 0.57× | **0.63×** | **0.68×** | 1.01× |
+
+#### `ffi-tls` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.27× | 0.33× | **1.23×** | **1.25×** | 0.41× | 0.57× | **0.69×** | **0.73×** | 1.07× |
+| slim-v26.6.0-10 | 0.27× | 0.32× | **1.23×** | **1.24×** | 0.42× | 0.57× | **0.67×** | **0.73×** | 1.01× |
+
+#### `ffi-tls-sqlite` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.35× | 0.43× | **1.24×** | **1.21×** | 0.42× | 0.58× | **0.69×** | **0.69×** | 1.01× |
+
+#### `sqlite` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.30× | 0.36× | **1.23×** | **1.30×** | 0.41× | 0.57× | **0.64×** | **0.67×** | 1.02× |
 
 ### `macos-arm64`
 
-Only one run recorded on this platform; a trend needs at least two.
+#### `full` absolute size (bytes)
+
+The one metric that is exact and machine-independent, so it is shown absolute
+rather than as a ratio.
+
+| version | raw | gzip -9 |
+| --- | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 6 064 768 | 2 899 589 |
+| slim-v26.6.0-10 | 6 092 384 | 2 910 606 |
+
+#### `balanced-min` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.35× | 0.39× | **1.30×** | **1.26×** | 0.84× | 1.01× | **0.71×** | **0.67×** | **0.89×** |
+
+#### `tuned-min` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.34× | 0.37× | **1.07×** | 1.02× | 0.82× | 0.98× | **0.73×** | **0.71×** | **0.88×** |
+
+#### `min` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.33× | 0.38× | 0.96× | 0.89× | 0.81× | 0.78× | **0.71×** | **0.65×** | 1.05× |
+| slim-v26.6.0-10 | 0.33× | 0.38× | **1.17×** | **1.28×** | 0.79× | 0.99× | **0.57×** | **0.62×** | **0.84×** |
+
+#### `ffi` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.34× | 0.39× | 0.91× | 0.83× | 0.80× | 1.01× | **0.71×** | **0.68×** | 1.08× |
+| slim-v26.6.0-10 | 0.34× | 0.39× | **1.36×** | **1.16×** | 0.79× | 1.01× | **0.65×** | **0.63×** | 0.95× |
+
+#### `tls` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.41× | 0.48× | 0.87× | 0.88× | 0.83× | 1.00× | **0.72×** | **0.71×** | 1.06× |
+| slim-v26.6.0-10 | 0.41× | 0.48× | **1.24×** | **1.27×** | 0.83× | 1.01× | **0.60×** | **0.63×** | **0.83×** |
+
+#### `ffi-tls` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | 0.42× | 0.49× | 0.89× | 0.85× | 0.83× | 1.01× | **0.72×** | **0.65×** | 1.06× |
+| slim-v26.6.0-10 | 0.42× | 0.49× | **1.18×** | **1.33×** | 0.83× | 0.97× | **0.56×** | **0.68×** | **0.92×** |
+
+#### `ffi-tls-sqlite` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.58× | 0.67× | **1.22×** | **1.48×** | 0.89× | 1.01× | **0.59×** | **0.60×** | **0.88×** |
+
+#### `sqlite` ÷ `full`
+
+| version | size raw | size gzip | startup noop | startup +stdlib | baseline RSS | peak RSS | mandelbrot | timers | SHA-256 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| slim-v26.6.0-8-4-g709c52a | — | — | — | — | — | — | — | — | — |
+| slim-v26.6.0-10 | 0.49× | 0.56× | **1.27×** | **1.53×** | 0.82× | 0.98× | **0.56×** | **0.62×** | **0.86×** |
 
 ## Limits
 
