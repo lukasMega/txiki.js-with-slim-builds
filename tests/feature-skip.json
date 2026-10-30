@@ -30,7 +30,10 @@
   "webcrypto": [
     "test-webcrypto-*.js",
     "test-app-compile.js",
-    "test-app-compile-corrupted-cache.js"
+    "test-app-compile-corrupted-cache.js",
+    "test-teardown-threadpool-*.js",
+    "test-worker-terminate-threadpool-digest*.js",
+    "test-worker-terminate-threadpool-nested.js"
   ],
   "ffi": [
     "test-ffi-*.js",

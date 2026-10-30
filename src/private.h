@@ -152,6 +152,7 @@ struct TJSRuntime {
     uv_async_t stop;
     bool is_worker;
     bool draining_microtasks;
+    bool microtasks_stopped;
 #ifdef TJS_HAVE_WASM
     struct {
         bool initialized;
