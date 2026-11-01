@@ -40,7 +40,8 @@
     "test-ffi-*.js",
     "test-dispose-ffi-dlopen.js",
     "test-sab-alignment.js",
-    "test-worker-ffi-classes.js"
+    "test-worker-ffi-classes.js",
+    "test-native-error-class.js"
   ],
   "cli.eval": [
     "test-console-*.js",
