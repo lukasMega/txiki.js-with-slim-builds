@@ -23,7 +23,12 @@
     "test-fetch-alpn-no-h3-over-tcp.js",
     "test-fetch-pooled-custom-headers.js",
     "test-serve-empty-request-body.js",
-    "test-teardown-live-tls.js"
+    "test-teardown-live-tls.js",
+    "test-fetch-abort-pooled-leader-h2.js",
+    "test-fetch-cookie-secure-httponly.js",
+    "test-fetch-response-set-cookie.js",
+    "test-serve-set-cookie-h2.js",
+    "test-import-https-alpn-no-h3-over-tcp.js"
   ],
   "bundledCa": [
     "test-tls-external.js"
@@ -45,7 +50,8 @@
   ],
   "cli.eval": [
     "test-console-*.js",
-    "test-mem-limit.js"
+    "test-mem-limit.js",
+    "test-import-https-alpn-no-h3-over-tcp.js"
   ],
   "cli.serve": [
     "test-serve-basic.js",

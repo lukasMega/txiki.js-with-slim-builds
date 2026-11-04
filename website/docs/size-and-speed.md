@@ -40,16 +40,16 @@ fork has. Use the selector to compare it against deltas derived from released pr
 fewer features but exist for all four platforms.
 
 Sizes in the table below are from `BUILDINFO.txt` inside each published artifact of
-**`slim-v26.6.0-10`** (commit `d684c95b`, 2026-10-26), **linux-x86_64**, unpacked and stripped.
+**`slim-v26.11.0-1`** (commit `fe20d1c2`, 2026-11-01), **linux-x86_64**, unpacked and stripped.
 
 | profile | binary | vs `min` |
 | --- | ---: | ---: |
-| `min` | 1,964,056 B | — |
-| `ffi` | 2,009,560 B | +44 KB |
-| `tls` | 2,423,120 B | +448 KB |
-| `sqlite` | 2,766,072 B | +783 KB |
-| `ffi-tls` | 2,468,656 B | +493 KB |
-| `ffi-tls-sqlite` | 3,274,768 B | +1,280 KB |
+| `min` | 1,943,576 B | — |
+| `ffi` | 1,989,080 B | +44 KB |
+| `tls` | 2,402,640 B | +448 KB |
+| `sqlite` | 2,745,592 B | +783 KB |
+| `ffi-tls` | 2,444,080 B | +489 KB |
+| `ffi-tls-sqlite` | 3,250,192 B | +1,276 KB |
 
 A **default upstream build is 9,144,328 B**, so `min` is `0.21×` of it. Most of that gap is
 WebAssembly: WAMR is compiled out of every published profile.
