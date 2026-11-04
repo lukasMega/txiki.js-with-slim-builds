@@ -10,7 +10,7 @@ import key from './fixtures/server-key.pem' with { type: 'text' };
 // HTTP/2. allowInsecure accepts the self-signed fixture certificate. Every
 // fetch has a timeout so a body that never ends fails instead of hanging.
 
-const TIMEOUT_MS = 5000;
+const TIMEOUT_MS = tjs.env.TJS_GC_STRESS ? 60000 : 5000;
 
 async function withServer(fn) {
     const server = tjs.serve({
